@@ -12,8 +12,8 @@ namespace isaac
 {
     public partial class Form1 : Form
     {
-        private int width = 706;
-        private int height = 729;
+        private int width = 770;
+        private int height = 790;
 
         private int sizeOfSides = 30;
 
@@ -24,67 +24,103 @@ namespace isaac
             this.Width = width;
             this.Height = height;
 
+            GenerateCharacter();
             GenerateMap();
+        }
+
+        private void GenerateCharacter()
+        {
+            string pathForCharacter = System.IO.Path.GetFullPath(@"textures\hero-walk-front-1.png");
+
+            PictureBox character = new PictureBox();
+
+            character.Image = Image.FromFile(pathForCharacter);
+            character.SizeMode = PictureBoxSizeMode.StretchImage;
+
+            character.Location = new Point(300, 300);
+            character.Size = new Size(sizeOfSides, sizeOfSides);
+
+            this.Controls.Add(character);
         }
 
         private void GenerateMap()
         {
-            for (int i = 0; i < width / sizeOfSides; i++)
+            string path = System.IO.Path.GetFullPath(@"textures\stonebricksmooth_cracked.png");
+            string pathForDirt = System.IO.Path.GetFullPath(@"textures\dirt.png");
+            string pathForStoneMoss = System.IO.Path.GetFullPath(@"textures\stoneMoss.png");
+
+            Random rnd = new Random();
+
+            for (int i = 0; i < 25; i++)
             {
-                PictureBox pic = new PictureBox();
+                for (int j = 0; j < 25; j++)
+                {
+                    if (i == 0)
+                    {
+                        PictureBox borderLeft = new PictureBox();
 
-                pic.BackColor = Color.Black;
-                pic.Location = new Point(0, sizeOfSides * i);
-                pic.Size = new Size(width - 10, 1);
-                this.Controls.Add(pic);
+                        borderLeft.Image = Image.FromFile(path);
+                        borderLeft.SizeMode = PictureBoxSizeMode.StretchImage;
 
-                PictureBox borderLeft = new PictureBox();
+                        borderLeft.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                        borderLeft.Size = new Size(sizeOfSides, sizeOfSides);
+                        this.Controls.Add(borderLeft);
+                    } else if (i == 24)
+                    {
+                        PictureBox borderLeft = new PictureBox();
 
-                string path = System.IO.Path.GetFullPath(@"textures\stonebricksmooth_cracked.png");
-                borderLeft.Image = Image.FromFile(path);
-                borderLeft.SizeMode = PictureBoxSizeMode.StretchImage;
+                        borderLeft.Image = Image.FromFile(path);
+                        borderLeft.SizeMode = PictureBoxSizeMode.StretchImage;
 
-                borderLeft.Location = new Point(0, sizeOfSides * i);
-                borderLeft.Size = new Size(sizeOfSides, sizeOfSides);
-                this.Controls.Add(borderLeft);
+                        borderLeft.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                        borderLeft.Size = new Size(sizeOfSides, sizeOfSides);
+                        this.Controls.Add(borderLeft);
+                    } else if (j == 0)
+                    {
+                        PictureBox borderUp = new PictureBox();
 
-                PictureBox borderRight = new PictureBox();
+                        borderUp.Image = Image.FromFile(path);
+                        borderUp.SizeMode = PictureBoxSizeMode.StretchImage;
 
-                borderRight.Image = Image.FromFile(path);
-                borderRight.SizeMode = PictureBoxSizeMode.StretchImage;
+                        borderUp.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                        borderUp.Size = new Size(sizeOfSides, sizeOfSides);
+                        this.Controls.Add(borderUp);
+                    } else if (j == 24)
+                    {
+                        PictureBox borderDown = new PictureBox();
 
-                borderRight.Location = new Point(661, sizeOfSides * i);
-                borderRight.Size = new Size(sizeOfSides, sizeOfSides);
-                this.Controls.Add(borderRight);
-            }
+                        borderDown.Image = Image.FromFile(path);
+                        borderDown.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            for (int i = 0; i < width / sizeOfSides; i++)
-            {
-                PictureBox pic = new PictureBox();
+                        borderDown.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                        borderDown.Size = new Size(sizeOfSides, sizeOfSides);
+                        this.Controls.Add(borderDown);
+                    } else
+                    {
+                        if (rnd.Next(1, 100) > 40)
+                        {
+                            PictureBox dirt = new PictureBox();
 
-                pic.BackColor = Color.Black;
-                pic.Location = new Point(sizeOfSides * i, 0);
-                pic.Size = new Size(1, height - 20);
-                this.Controls.Add(pic);
+                            dirt.Image = Image.FromFile(pathForStoneMoss);
+                            dirt.SizeMode = PictureBoxSizeMode.StretchImage;
 
-                PictureBox borderUp = new PictureBox();
+                            dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                            dirt.Size = new Size(sizeOfSides, sizeOfSides);
+                            this.Controls.Add(dirt);
+                        }
+                        else
+                        {
+                            PictureBox dirt = new PictureBox();
 
-                string path = System.IO.Path.GetFullPath(@"textures\stonebricksmooth_cracked.png");
-                borderUp.Image = Image.FromFile(path);
-                borderUp.SizeMode = PictureBoxSizeMode.StretchImage;
+                            dirt.Image = Image.FromFile(pathForDirt);
+                            dirt.SizeMode = PictureBoxSizeMode.StretchImage;
 
-                borderUp.Location = new Point(sizeOfSides * i, 0);
-                borderUp.Size = new Size(sizeOfSides, sizeOfSides);
-                this.Controls.Add(borderUp);
-
-                PictureBox borderDown = new PictureBox();
-
-                borderDown.Image = Image.FromFile(path);
-                borderDown.SizeMode = PictureBoxSizeMode.StretchImage;
-
-                borderDown.Location = new Point(sizeOfSides * i, 661);
-                borderDown.Size = new Size(sizeOfSides, sizeOfSides);
-                this.Controls.Add(borderDown);
+                            dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                            dirt.Size = new Size(sizeOfSides, sizeOfSides);
+                            this.Controls.Add(dirt);
+                        }
+                    }
+                }
             }
         }
     }
