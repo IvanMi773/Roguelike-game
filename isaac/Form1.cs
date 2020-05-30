@@ -17,6 +17,8 @@ namespace isaac
 
         private int sizeOfSides = 30;
 
+        PictureBox character = new PictureBox();
+
         public Form1()
         {
             InitializeComponent();
@@ -24,15 +26,62 @@ namespace isaac
             this.Width = width;
             this.Height = height;
 
+            this.KeyDown += new KeyEventHandler(keyPress);
+
             GenerateCharacter();
             GenerateMap();
+        }
+
+        private void checkBorders(int x, int y)
+        {
+            if (character.Location.X < 0 + sizeOfSides)
+            {
+                moveCharacter(sizeOfSides / 2, 0);
+            } else if (character.Location.X > 23 * sizeOfSides + (2 / sizeOfSides))
+            {
+                moveCharacter(-sizeOfSides / 2, 0);
+            } else if (character.Location.Y < 0 + sizeOfSides)
+            {
+                moveCharacter(0, sizeOfSides / 2);
+            } else if (character.Location.Y > 23 * sizeOfSides + (2 / sizeOfSides))
+            {
+                moveCharacter(0, -sizeOfSides / 2);
+            } else
+            {
+                moveCharacter(x, y);
+            }
+        }
+
+        private void moveCharacter(int x, int y)
+        {
+            character.Location = new Point(character.Location.X + x, character.Location.Y + y);
+        }
+
+        private void keyPress(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyValue)
+            {
+                case 68:
+                    checkBorders(sizeOfSides / 2, 0);
+                    break;
+
+                case 65:
+                    checkBorders(-(sizeOfSides / 2), 0);
+                    break;
+
+                case 87:
+                    checkBorders(0, - (sizeOfSides / 2));
+                    break;
+
+                case 83:
+                    checkBorders(0, (sizeOfSides / 2));
+                    break;
+            }
         }
 
         private void GenerateCharacter()
         {
             string pathForCharacter = System.IO.Path.GetFullPath(@"textures\hero-walk-front-1.png");
-
-            PictureBox character = new PictureBox();
 
             character.Image = Image.FromFile(pathForCharacter);
             character.SizeMode = PictureBoxSizeMode.StretchImage;
