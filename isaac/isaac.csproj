@@ -86,5 +86,8 @@
   <ItemGroup>
     <None Include="bin\Debug\textures\dirt.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\textures\waterfall-1.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

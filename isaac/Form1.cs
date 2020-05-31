@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,16 +13,20 @@ namespace isaac
 {
     public partial class Form1 : Form
     {
+        PictureBox background = new PictureBox();
+
         private int width = 770;
         private int height = 790;
 
         private int sizeOfSides = 30;
+        private int[,] map = new int[25, 25];
 
         PictureBox character = new PictureBox();
 
         public Form1()
         {
             InitializeComponent();
+
 
             this.Width = width;
             this.Height = height;
@@ -30,61 +35,72 @@ namespace isaac
 
             GenerateCharacter();
             GenerateMap();
+
+            background.Image = Image.FromFile(System.IO.Path.GetFullPath(@"textures\waterfall-1.png"));
+            background.Location = new Point(0, 0);
+            background.Size = new Size(750, 750);
+            background.SizeMode = PictureBoxSizeMode.StretchImage;
+            this.Controls.Add(background);
+
+            character.Parent = background;
+            character.BackgroundImage = background.Image;
         }
 
-        private void checkBorders(int x, int y)
+        private bool isWall(int x, int y)
         {
-            if (character.Location.X < 0 + sizeOfSides)
+            if (map[(character.Location.X + x) / (sizeOfSides), (character.Location.Y + y) / sizeOfSides] == 1)
             {
-                moveCharacter(sizeOfSides / 2, 0);
-            } else if (character.Location.X > 23 * sizeOfSides + (2 / sizeOfSides))
-            {
-                moveCharacter(-sizeOfSides / 2, 0);
-            } else if (character.Location.Y < 0 + sizeOfSides)
-            {
-                moveCharacter(0, sizeOfSides / 2);
-            } else if (character.Location.Y > 23 * sizeOfSides + (2 / sizeOfSides))
-            {
-                moveCharacter(0, -sizeOfSides / 2);
+                return false;
             } else
             {
-                moveCharacter(x, y);
+                return true;
             }
         }
 
-        private void moveCharacter(int x, int y)
+        private void moveCharacter(int x, int y, string path)
         {
-            character.Location = new Point(character.Location.X + x, character.Location.Y + y);
+            if (isWall(x, y))
+            {
+                character.Image = Image.FromFile(path);
+                character.Location = new Point(character.Location.X + x, character.Location.Y + y);
+            }
         }
 
         private void keyPress(object sender, KeyEventArgs e)
         {
+            string pathForCharacterGoFont = System.IO.Path.GetFullPath(@"textures\hero-walk-front-2.png");
+            string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero-walk-back-2.png");
+            string pathForCharacterGoSideLeft = System.IO.Path.GetFullPath(@"textures\hero-walk-side-left-2.png");
+            string pathForCharacterGoSideRight = System.IO.Path.GetFullPath(@"textures\hero-walk-side-right-2.png");
+
             switch (e.KeyValue)
             {
                 case 68:
-                    checkBorders(sizeOfSides / 2, 0);
+                    moveCharacter(sizeOfSides, 0, pathForCharacterGoSideRight);
                     break;
 
                 case 65:
-                    checkBorders(-(sizeOfSides / 2), 0);
+                    moveCharacter(-sizeOfSides, 0, pathForCharacterGoSideLeft);
                     break;
 
                 case 87:
-                    checkBorders(0, - (sizeOfSides / 2));
+                    moveCharacter(0, -sizeOfSides, pathForCharacterGoBack);
                     break;
 
                 case 83:
-                    checkBorders(0, (sizeOfSides / 2));
+                    moveCharacter(0, sizeOfSides, pathForCharacterGoFont);
                     break;
             }
         }
 
         private void GenerateCharacter()
         {
-            string pathForCharacter = System.IO.Path.GetFullPath(@"textures\hero-walk-front-1.png");
+            string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero-walk-back-2.png");
 
-            character.Image = Image.FromFile(pathForCharacter);
+            character.Image = Image.FromFile(pathForCharacterGoBack);
             character.SizeMode = PictureBoxSizeMode.StretchImage;
+
+            
 
             character.Location = new Point(300, 300);
             character.Size = new Size(sizeOfSides, sizeOfSides);
@@ -114,6 +130,8 @@ namespace isaac
                         borderLeft.Location = new Point(i * sizeOfSides, j * sizeOfSides);
                         borderLeft.Size = new Size(sizeOfSides, sizeOfSides);
                         this.Controls.Add(borderLeft);
+
+                        map[i, j] = 1;
                     } else if (i == 24)
                     {
                         PictureBox borderLeft = new PictureBox();
@@ -124,6 +142,8 @@ namespace isaac
                         borderLeft.Location = new Point(i * sizeOfSides, j * sizeOfSides);
                         borderLeft.Size = new Size(sizeOfSides, sizeOfSides);
                         this.Controls.Add(borderLeft);
+
+                        map[i, j] = 1;
                     } else if (j == 0)
                     {
                         PictureBox borderUp = new PictureBox();
@@ -134,6 +154,8 @@ namespace isaac
                         borderUp.Location = new Point(i * sizeOfSides, j * sizeOfSides);
                         borderUp.Size = new Size(sizeOfSides, sizeOfSides);
                         this.Controls.Add(borderUp);
+
+                        map[i, j] = 1;
                     } else if (j == 24)
                     {
                         PictureBox borderDown = new PictureBox();
@@ -144,9 +166,11 @@ namespace isaac
                         borderDown.Location = new Point(i * sizeOfSides, j * sizeOfSides);
                         borderDown.Size = new Size(sizeOfSides, sizeOfSides);
                         this.Controls.Add(borderDown);
+
+                        map[i, j] = 1;
                     } else
                     {
-                        if (rnd.Next(1, 100) > 40)
+                        if (rnd.Next(1, 100) < 10)
                         {
                             PictureBox dirt = new PictureBox();
 
@@ -156,18 +180,24 @@ namespace isaac
                             dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
                             dirt.Size = new Size(sizeOfSides, sizeOfSides);
                             this.Controls.Add(dirt);
-                        }
-                        else
+
+                            map[i, j] = 1;
+                        } else
                         {
-                            PictureBox dirt = new PictureBox();
-
-                            dirt.Image = Image.FromFile(pathForDirt);
-                            dirt.SizeMode = PictureBoxSizeMode.StretchImage;
-
-                            dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
-                            dirt.Size = new Size(sizeOfSides, sizeOfSides);
-                            this.Controls.Add(dirt);
+                            map[i, j] = 0;
                         }
+                        
+                        //else
+                        //{
+                        //PictureBox dirt = new PictureBox();
+
+                        //dirt.Image = Image.FromFile(pathForDirt);
+                        //dirt.SizeMode = PictureBoxSizeMode.StretchImage;
+
+                        //dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                        //dirt.Size = new Size(sizeOfSides, sizeOfSides);
+                        //this.Controls.Add(dirt);
+                        //}
                     }
                 }
             }
