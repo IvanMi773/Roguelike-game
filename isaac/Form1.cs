@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,17 +16,20 @@ namespace isaac
     {
         PictureBox background = new PictureBox();
 
-        private int width = 770;
+        private int width = 770 + 300;
         private int height = 790;
 
         private int sizeOfSides = 30;
 
         private int[,] map = new int[25, 25];
-        private PictureBox[] enemyList = new PictureBox[30];
+        private Enemy1[] enemyList = new Enemy1[30];
+        private int countOfEnemies = 0;
+
+        private int[] characterDir = new int[2];
 
         PictureBox character = new PictureBox();
 
-        private int level = 0;
+        private int arrowDamage = 100;
 
         string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-1.png");
 
@@ -55,10 +59,51 @@ namespace isaac
 
             GenerateWorld();
 
-            Timer timer = new Timer();
-            timer.Tick += new EventHandler(moveEnemies);
-            timer.Interval = 250;
-            timer.Start();
+            Timer enemyTimer = new Timer();
+            enemyTimer.Tick += new EventHandler(moveEnemies);
+            enemyTimer.Interval = 250;
+            enemyTimer.Start();
+        }
+
+        private int level = 0;
+
+        private void killEnemy(PictureBox arrow)
+        {
+            for (int i = 0; i < enemyList.Length; i++)
+            {
+                if (enemyList[i] == null)
+                {
+                    break;
+                }
+
+                if (arrow.Location == enemyList[i].sprite.Location)
+                {
+                    if ((enemyList[i].hp - arrowDamage) == 0)
+                    {
+                        this.Controls.Remove(enemyList[i].sprite);
+
+                        for (int j = ++i; j < enemyList.Length; j++)
+                        {
+                            if (enemyList[i] == null)
+                            {
+                                break;
+                            }
+
+                            enemyList[i - 1] = enemyList[i];
+                        }
+
+                        countOfEnemies--;
+                    }
+                }
+            }
+        }
+
+        private void createStats()
+        {
+            Label levelLabel = new Label();
+            levelLabel.Text = "Рівень: " + level.ToString();
+            levelLabel.Location = new Point(width - 250, 10);
+            this.Controls.Add(levelLabel);
         }
 
         private void GenerateWorld()
@@ -67,11 +112,13 @@ namespace isaac
             GenerateEnemies();
             GenerateCharacter();
             GenerateMap();
+            createStats();
 
             background.Image = Image.FromFile(pathForBackground);
             background.Location = new Point(0, 0);
             background.Size = new Size(750, 750);
             background.SizeMode = PictureBoxSizeMode.StretchImage;
+            background.BringToFront();
             this.Controls.Add(background);
 
             character.BackgroundImage = background.Image;
@@ -79,19 +126,20 @@ namespace isaac
 
         private void moveEnemies(Object myObject, EventArgs eventArgs)
         {
-            foreach (PictureBox enemy in enemyList)
+            foreach (Enemy1 enemy in enemyList)
             {
                 if (enemy == null)
                 {
                     break;
                 }
-                moveEnemy(sizeOfSides, sizeOfSides, enemy);
+
+                moveEnemy(sizeOfSides, sizeOfSides, enemy.sprite);
             }
         }
 
         private void moveEnemy(int x, int y, PictureBox enemy)
         {
-            var directions = new int[4, 2] { { -1, 0}, { 1, 0}, { 0, -1 }, { 0, 1 } };
+            var directions = new int[4, 2] { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
 
             var dx = character.Location.X - enemy.Location.X;
             var dy = character.Location.Y - enemy.Location.Y;
@@ -105,7 +153,8 @@ namespace isaac
                     {
                         enemy.Image = Image.FromFile(pathForEnemy1Left);
                         enemy.Location = new Point(enemy.Location.X + (directions[0, 0] * x), enemy.Location.Y + (directions[0, 1] * y));
-                    } else
+                    }
+                    else
                     {
                         enemy.Location = new Point(enemy.Location.X + (directions[0, 0] * x), enemy.Location.Y + (directions[0, 1] * y));
                     }
@@ -140,19 +189,12 @@ namespace isaac
                         enemy.Location = new Point(enemy.Location.X + (directions[3, 0] * x), enemy.Location.Y + (directions[3, 1] * y));
                     }
                 }
-            }            
+            }
         }
 
         private void GenerateEnemies()
         {
-            for(int i = 0; i < enemyList.Length; i++)
-            {
-                if (enemyList[i] == null)
-                {
-                    break;
-                }
-                enemyList[i] = null;
-            }
+            Array.Clear(enemyList, 0, enemyList.Length);
 
             Random rnd = new Random();
 
@@ -160,61 +202,77 @@ namespace isaac
 
             for (int i = 0; i <= rnd.Next(1, 11); i++)
             {
-                PictureBox enemy1 = new PictureBox();
+                Enemy1 enemy1 = new Enemy1();
+                enemy1.sprite.Image = Image.FromFile(pathForEnemy1Back);
+                enemy1.sprite.SizeMode = PictureBoxSizeMode.StretchImage;
+                enemy1.sprite.Location = new Point(places[rnd.Next(0, 6)], places[rnd.Next(0, 6)]);
+                enemy1.sprite.Size = new Size(sizeOfSides, sizeOfSides);
 
-                enemy1.Image = Image.FromFile(pathForEnemy1Back);
-                enemy1.SizeMode = PictureBoxSizeMode.StretchImage;
-                enemy1.Location = new Point(places[rnd.Next(0, 6)], places[rnd.Next(0, 6)]);
-                enemy1.Size = new Size(sizeOfSides, sizeOfSides);
+                enemy1.sprite.BackgroundImage = Image.FromFile(pathForBackground);
 
-                enemy1.BackgroundImage = Image.FromFile(pathForBackground);
 
-                this.Controls.Add(enemy1);
+                this.Controls.Add(enemy1.sprite);
 
+                countOfEnemies++;
                 enemyList[i] = enemy1;
             }
         }
 
+        Timer timer = new Timer();
+
         private void shot()
         {
-            string pathForArrow = System.IO.Path.GetFullPath(@"textures\arrow.png");
-            PictureBox arrow = new PictureBox();
+            int i = 0;
 
+            string pathForArrow = System.IO.Path.GetFullPath(@"textures\arrow.png");
+
+            PictureBox arrow = new PictureBox();
             arrow.Image = Image.FromFile(pathForArrow);
             arrow.SizeMode = PictureBoxSizeMode.StretchImage;
-            arrow.Location = new Point(character.Location.X + (sizeOfSides), character.Location.Y + (sizeOfSides));
+
+            arrow.Location = new Point(character.Location.X, character.Location.Y);
+
+            if (characterDir[0] == -1)
+            {
+                arrow.Image.RotateFlip(RotateFlipType.Rotate90FlipX);
+            }
+            else if (characterDir[0] == 1)
+            {
+                arrow.Image.RotateFlip(RotateFlipType.Rotate90FlipNone);
+            }
+            else if (characterDir[1] == 1)
+            {
+                arrow.Image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+            }
+
             arrow.Size = new Size(sizeOfSides, sizeOfSides);
             this.Controls.Add(arrow);
 
-            for (int i = 0; i < 6; i++)
+            timer.Interval = 50;
+            timer.Start();
+
+            timer.Tick += new EventHandler((o, ev) =>
             {
-                arrow.Location = new Point(arrow.Location.X + (sizeOfSides / 2), arrow.Location.Y + (sizeOfSides / 2));
-            }
+                arrow.Location = new Point(arrow.Location.X + sizeOfSides * characterDir[0], arrow.Location.Y + sizeOfSides * characterDir[1]);
+                i++;
+                killEnemy(arrow);
 
-            //this.Controls.Remove(arrow);
-            label1.Text = "remov";
+                arrow.BringToFront();
+                arrow.BackgroundImage = background.Image;
 
-            //if (character.Image == Image.FromFile(pathForCharacterGoBack))
-            //{
-            //    character.Image = Image.FromFile(pathForCharacterShotBack);
-            //} else if (character.Image == Image.FromFile(pathForCharacterGoFont))
-            //{
-            //    character.Image = Image.FromFile(pathForCharacterShotFont);
-            //}
-            //else if (character.Image == Image.FromFile(pathForCharacterGoSideLeft))
-            //{
-            //    character.Image = Image.FromFile(pathForCharacterShotSideLeft);
-            //}
-            //else if (character.Image == Image.FromFile(pathForCharacterGoSideRight))
-            //{
-            //    character.Image = Image.FromFile(pathForCharacterShotSideRight);
-            //}
+                if (i > 8)
+                {
+                    timer.Stop();
+                    this.Controls.Remove(arrow);
+                    i = 0;
+                }
+            });
         }
 
         private void GoDoors()
         {
+            level++;
             character.Location = new Point(300, 300);
-            //DestroyMap();
             GenerateWorld();
         }
 
@@ -236,8 +294,12 @@ namespace isaac
             {
                 GoDoors();
 
-            } else if (isWall(x, y, character))
+            }
+            else if (isWall(x, y, character))
             {
+                characterDir[0] = (x / sizeOfSides);
+                characterDir[1] = (y / sizeOfSides);
+
                 character.Image = Image.FromFile(path);
                 character.Location = new Point(character.Location.X + x, character.Location.Y + y);
             }
@@ -376,7 +438,8 @@ namespace isaac
                             map[i, j] = 2;
 
                             countOfDoors++;
-                        } else 
+                        }
+                        else
                         {
                             PictureBox borderUp = new PictureBox();
 
@@ -389,7 +452,8 @@ namespace isaac
 
                             map[i, j] = 1;
                         }
-                    } else if (j == 24)
+                    }
+                    else if (j == 24)
                     {
                         if (rnd.Next(0, 50) == 1 && countOfDoors <= 2)
                         {
@@ -397,7 +461,8 @@ namespace isaac
                             map[i, j] = 2;
 
                             countOfDoors++;
-                        } else
+                        }
+                        else
                         {
                             PictureBox borderDown = new PictureBox();
 
@@ -411,7 +476,8 @@ namespace isaac
                             map[i, j] = 1;
                         }
 
-                    } else
+                    }
+                    else
                     {
                         if (rnd.Next(1, 100) < 10)
                         {
@@ -425,7 +491,8 @@ namespace isaac
                             this.Controls.Add(dirt);
 
                             map[i, j] = 1;
-                        } else
+                        }
+                        else
                         {
                             map[i, j] = 0;
                         }
