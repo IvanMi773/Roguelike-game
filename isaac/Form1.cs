@@ -23,13 +23,14 @@ namespace isaac
 
         private int[,] map = new int[25, 25];
         private Enemy1[] enemyList = new Enemy1[30];
+        private int[,] enemyLocations = new int[30, 2];
+        //private int[] enemyLocationsX = new int[30];
+        //private int[] enemyLocationsY = new int[30];
         private int countOfEnemies = 0;
 
         private int[] characterDir = new int[2];
 
-        PictureBox character = new PictureBox();
-
-        private int arrowDamage = 100;
+        Character character = new Character();
 
         string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-1.png");
 
@@ -48,6 +49,8 @@ namespace isaac
         string pathForEnemy1Left = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-side-left-4.png");
         string pathForEnemy1Right = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-side-right-4.png");
 
+        Timer enemyTimer;
+
         public Form1()
         {
             InitializeComponent();
@@ -59,13 +62,46 @@ namespace isaac
 
             GenerateWorld();
 
-            Timer enemyTimer = new Timer();
+            enemyTimer = new Timer();
             enemyTimer.Tick += new EventHandler(moveEnemies);
-            enemyTimer.Interval = 250;
+            enemyTimer.Interval = 500;
             enemyTimer.Start();
+
+
         }
 
-        private int level = 0;
+        private int level = 1;
+
+        private void GameOver()
+        {
+            level = 1;
+            timer.Stop();
+            //enemyTimer.Stop();
+            MessageBox.Show("You are dead", "Defeat");
+            GenerateWorld();
+        }
+
+        private void getDamage()
+        {
+            for (int i = 0; i < enemyList.Length; i++)
+            {
+                if (enemyList[i] == null)
+                {
+                    break;
+                }
+
+                if (enemyList[i].sprite.Location == character.sprite.Location)
+                {
+                    character.HitPoints -= enemyList[i].damage;
+                    createStats(level, character.killedEnemies, character.HitPoints);
+
+                    if (character.HitPoints == 0)
+                    {
+                        GameOver();
+                    }
+                }
+            }
+        }
 
         private void killEnemy(PictureBox arrow)
         {
@@ -78,18 +114,22 @@ namespace isaac
 
                 if (arrow.Location == enemyList[i].sprite.Location)
                 {
-                    if ((enemyList[i].hp - arrowDamage) == 0)
+                    if ((enemyList[i].HitPoints - character.damage) == 0)
                     {
+                        character.killedEnemies++;
+                        createStats(level, character.killedEnemies, character.HitPoints);
+
                         this.Controls.Remove(enemyList[i].sprite);
+                        enemyList[i] = null;
 
                         for (int j = ++i; j < enemyList.Length; j++)
                         {
-                            if (enemyList[i] == null)
+                            if (enemyList[j] == null)
                             {
                                 break;
                             }
 
-                            enemyList[i - 1] = enemyList[i];
+                            enemyList[j - 1] = enemyList[j];
                         }
 
                         countOfEnemies--;
@@ -98,21 +138,48 @@ namespace isaac
             }
         }
 
-        private void createStats()
+        Label levelLabel = new Label();
+        Label killedEnemiesLabel = new Label();
+        Label hpLabel = new Label();
+        Label countOfEnemiesLabel = new Label();
+
+        private void createStats(int lev, int killed, int hp)
         {
-            Label levelLabel = new Label();
-            levelLabel.Text = "Рівень: " + level.ToString();
+            levelLabel.Text = "Рівень: " + lev.ToString();
             levelLabel.Location = new Point(width - 250, 10);
             this.Controls.Add(levelLabel);
+            levelLabel.Refresh();
+
+            killedEnemiesLabel.Text = "Вбито: " + killed.ToString();
+            killedEnemiesLabel.Location = new Point(width - 250, 40);
+            this.Controls.Add(killedEnemiesLabel);
+            killedEnemiesLabel.Refresh();
+
+            countOfEnemiesLabel.Text = "Потрібно вбити: " + countOfEnemies.ToString();
+            countOfEnemiesLabel.Location = new Point(width - 250, 70);
+            this.Controls.Add(countOfEnemiesLabel);
+            countOfEnemiesLabel.Refresh();
+
+            hpLabel.Text = "Здоровя: " + hp.ToString();
+            hpLabel.Location = new Point(width - 250, 100);
+            this.Controls.Add(hpLabel);
+            hpLabel.Refresh();
         }
 
         private void GenerateWorld()
         {
+            countOfEnemies = 0;
+            enemyTimer = new Timer();
+            enemyTimer.Start();
+
+            timer = new Timer();
+            //timer.Stop();
+
             DestroyMap();
             GenerateEnemies();
             GenerateCharacter();
             GenerateMap();
-            createStats();
+            createStats(level, character.killedEnemies, character.HitPoints);
 
             background.Image = Image.FromFile(pathForBackground);
             background.Location = new Point(0, 0);
@@ -121,28 +188,36 @@ namespace isaac
             background.BringToFront();
             this.Controls.Add(background);
 
-            character.BackgroundImage = background.Image;
+            character.sprite.BackgroundImage = background.Image;
         }
 
         private void moveEnemies(Object myObject, EventArgs eventArgs)
         {
-            foreach (Enemy1 enemy in enemyList)
+            for (int i = 0; i < enemyList.Length; i++)
             {
-                if (enemy == null)
+                if (enemyList[i] == null)
                 {
                     break;
                 }
 
-                moveEnemy(sizeOfSides, sizeOfSides, enemy.sprite);
+                moveEnemy(sizeOfSides, sizeOfSides, enemyList[i].sprite, i);
             }
         }
 
-        private void moveEnemy(int x, int y, PictureBox enemy)
+        //ListBox text = new ListBox();
+        private void moveEnemy(int x, int y, PictureBox enemy, int id)
         {
+            //text.Location = new Point(750, 300);
+            //text.Size = new Size(200, 200);
+            //this.Controls.Add(text);
+
             var directions = new int[4, 2] { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
 
-            var dx = character.Location.X - enemy.Location.X;
-            var dy = character.Location.Y - enemy.Location.Y;
+            var dx = character.sprite.Location.X - enemy.Location.X;
+            var dy = character.sprite.Location.Y - enemy.Location.Y;
+
+            //levelLabel.Text = Array.Exists(enemyLocationsX, item => item != enemy.Location.X).ToString();
+            //levelLabel.Refresh();
 
             if (Math.Abs(dx) > Math.Abs(dy))
             {
@@ -151,12 +226,25 @@ namespace isaac
                     // left
                     if (isWall((x * directions[0, 0]), (y * directions[0, 1]), enemy))
                     {
+                        //for (int i = 0; i < 30; i++)
+                        //{
+                        //    if (enemyLocationsX[i] != enemyLocationsX[id] + (x ) && enemyLocationsY[i] != enemyLocationsY[id] + (y ))
+                        //if (Array.Exists(enemyLocationsX, item => item != enemy.Location.X + (x * directions[0, 0])) && Array.Exists(enemyLocationsY, item => item != enemy.Location.Y + (y * directions[0, 1])))
+                        //{
                         enemy.Image = Image.FromFile(pathForEnemy1Left);
                         enemy.Location = new Point(enemy.Location.X + (directions[0, 0] * x), enemy.Location.Y + (directions[0, 1] * y));
-                    }
-                    else
-                    {
-                        enemy.Location = new Point(enemy.Location.X + (directions[0, 0] * x), enemy.Location.Y + (directions[0, 1] * y));
+
+                        enemyLocations[id, 0] = enemy.Location.X;
+                        enemyLocations[id, 1] = enemy.Location.Y;
+
+                        //text.Items.Clear();
+                        //for (int j = 0; j < 30; j++)
+                        //{
+                        
+                        //}
+                        //        break;
+                        //    }
+                        //}
                     }
                 }
                 else
@@ -164,8 +252,23 @@ namespace isaac
                     // right
                     if (isWall((x * directions[1, 0]), (y * directions[1, 1]), enemy))
                     {
+                        //for (int i = 0; i < 30; i++)
+                        //{
+                        //    if (enemyLocationsX[i] != enemyLocationsX[id] + (x) && enemyLocationsY[i] != enemyLocationsY[id] + (y ))
+                        //if (Array.Exists(enemyLocationsX, item => item != enemy.Location.X + (x * directions[1, 0])) && Array.Exists(enemyLocationsY, item => item != enemy.Location.Y + (y * directions[1, 1])))
+                        //{
                         enemy.Image = Image.FromFile(pathForEnemy1Right);
                         enemy.Location = new Point(enemy.Location.X + (directions[1, 0] * x), enemy.Location.Y + (directions[1, 1] * y));
+
+                        enemyLocations[id, 0] = enemy.Location.X;
+                        enemyLocations[id, 1] = enemy.Location.Y;
+
+                        
+
+                        
+                        //        break;
+                        //    }
+                        //}
                     }
                 }
             }
@@ -176,8 +279,22 @@ namespace isaac
                     // up
                     if (isWall((x * directions[2, 0]), (y * directions[2, 1]), enemy))
                     {
+                        //for (int i = 0; i < 30; i++)
+                        //{
+                        //    if (enemyLocationsX[i] != enemyLocationsX[id] + (x) && enemyLocationsY[i] != enemyLocationsY[id] + (y ))
+                        //if (Array.Exists(enemyLocationsX, item => item != enemy.Location.X + (x * directions[2, 0])) && Array.Exists(enemyLocationsY, item => item != enemy.Location.Y + (y * directions[2, 1])))
+                        //{
                         enemy.Image = Image.FromFile(pathForEnemy1Back);
                         enemy.Location = new Point(enemy.Location.X + (directions[2, 0] * x), enemy.Location.Y + (directions[2, 1] * y));
+
+                        enemyLocations[id, 0] = enemy.Location.X;
+                        enemyLocations[id, 1] = enemy.Location.Y;
+
+                        //text.Items.Clear();
+                        
+                        //        break;
+                        //    }
+                        //}
                     }
                 }
                 else
@@ -185,31 +302,120 @@ namespace isaac
                     // down
                     if (isWall((x * directions[3, 0]), (y * directions[3, 1]), enemy))
                     {
+                        //for (int i = 0; i < 30; i++)
+                        //{
+                        //    if (enemyLocationsX[i] != enemyLocationsX[id] + (x) && enemyLocationsY[i] != enemyLocationsY[id] + (y))
+                        //if (Array.Exists(enemyLocationsX, item => item != enemy.Location.X + (x * directions[3, 0])) && Array.Exists(enemyLocationsY, item => item != enemy.Location.Y + (y * directions[3, 1])))
+                        //{
                         enemy.Image = Image.FromFile(pathForEnemy1Font);
                         enemy.Location = new Point(enemy.Location.X + (directions[3, 0] * x), enemy.Location.Y + (directions[3, 1] * y));
+
+                        enemyLocations[id, 0] = enemy.Location.X;
+                        enemyLocations[id, 1] = enemy.Location.Y;
+
+                        //text.Items.Clear();
+                        
+                        //        break;
+                        //    }
+                        //}
                     }
                 }
             }
+            //text.Items.Clear();
+            for (int j = 0; j < enemyList.Length; j++)
+            {
+                if (enemyLocations[j, 0] == enemy.Location.X && enemyLocations[j, 1] == enemy.Location.Y && j != id)
+                {
+                    //text.Items.Add("+");
+                    character.killedEnemies++;
+                    createStats(level, character.killedEnemies, character.HitPoints);
+
+                    this.Controls.Remove(enemyList[j].sprite);
+                    enemyList[j] = null;
+
+                    enemyLocations[j, 0] = 0;
+                    enemyLocations[j, 1] = 0;
+
+                    for (int s = ++j; s < enemyList.Length; s++)
+                    {
+                        if (enemyList[s] == null)
+                        {
+                            break;
+                        }
+
+                        enemyList[s - 1] = enemyList[s];
+                        enemyLocations[s - 1, 0] = enemyLocations[s, 0];
+                        enemyLocations[s - 1, 1] = enemyLocations[s, 1];
+                    }
+
+                    countOfEnemies--;
+                    break;
+                }
+                //text.Items.Add(enemyLocations[j, 0] + " " + enemyLocations[j, 1]);
+                //text.Refresh();
+            }
+
+
+
+            getDamage();
         }
 
         private void GenerateEnemies()
         {
+            //text.Items.Clear();
             Array.Clear(enemyList, 0, enemyList.Length);
+            Array.Clear(enemyLocations, 0, enemyLocations.Length);
+            //Array.Clear(enemyLocationsY, 0, enemyLocationsY.Length);
+
+            //for (int j = 0; j < 30; j++)
+            //{
+            //    enemyLocations[j, 0] = 1;
+            //    enemyLocations[j, 1] = 1;
+            //}
 
             Random rnd = new Random();
 
-            var places = new int[] { 60, 90, 120, 150, 180, 210 };
+            var places = new int[] { sizeOfSides * 2, sizeOfSides * 3, sizeOfSides * 4, sizeOfSides * 5, sizeOfSides * 6, sizeOfSides * 7, sizeOfSides * 8, sizeOfSides * 9, sizeOfSides * 10, sizeOfSides * 11, sizeOfSides * 12, sizeOfSides * 13, sizeOfSides * 14, sizeOfSides * 15, sizeOfSides * 16, sizeOfSides * 17, sizeOfSides * 18, sizeOfSides * 19, sizeOfSides * 20, sizeOfSides * 21, sizeOfSides * 22, sizeOfSides * 23 };
 
-            for (int i = 0; i <= rnd.Next(1, 11); i++)
+            //TextBox text = new TextBox();
+            //text.Location = new Point(750, 300);
+            //text.Size = new Size(200, 200);
+            //this.Controls.Add(text);
+
+            //TextBox text2 = new TextBox();
+            //text2.Location = new Point(750, 600);
+            //text2.Size = new Size(200, 200);
+            //this.Controls.Add(text2);
+
+            for (int i = 0; i <= rnd.Next(1, 6); i++)
             {
                 Enemy1 enemy1 = new Enemy1();
                 enemy1.sprite.Image = Image.FromFile(pathForEnemy1Back);
                 enemy1.sprite.SizeMode = PictureBoxSizeMode.StretchImage;
-                enemy1.sprite.Location = new Point(places[rnd.Next(0, 6)], places[rnd.Next(0, 6)]);
+
+                int num = rnd.Next(0, places.Length);
+                for (int j = 0; j < 30; j++)
+                {
+                    if (enemyLocations[j, 0] != places[num] && enemyLocations[j, 1] != places[num])
+                    {
+                        enemy1.sprite.Location = new Point(places[num], places[num]);
+
+                        enemyLocations[i, 0] = enemy1.sprite.Location.X;
+                        enemyLocations[i, 1] = enemy1.sprite.Location.Y;
+
+                        break;
+                    }
+                    else
+                    {
+                        num = rnd.Next(0, places.Length);
+                    }
+                }
+
                 enemy1.sprite.Size = new Size(sizeOfSides, sizeOfSides);
 
                 enemy1.sprite.BackgroundImage = Image.FromFile(pathForBackground);
 
+                enemy1.HitPoints = 100;
 
                 this.Controls.Add(enemy1.sprite);
 
@@ -218,7 +424,7 @@ namespace isaac
             }
         }
 
-        Timer timer = new Timer();
+        Timer timer;
 
         private void shot()
         {
@@ -230,7 +436,7 @@ namespace isaac
             arrow.Image = Image.FromFile(pathForArrow);
             arrow.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            arrow.Location = new Point(character.Location.X, character.Location.Y);
+            arrow.Location = new Point(character.sprite.Location.X, character.sprite.Location.Y);
 
             if (characterDir[0] == -1)
             {
@@ -245,22 +451,33 @@ namespace isaac
                 arrow.Image.RotateFlip(RotateFlipType.Rotate180FlipNone);
             }
 
+
             arrow.Size = new Size(sizeOfSides, sizeOfSides);
             this.Controls.Add(arrow);
 
+            timer = new Timer();
             timer.Interval = 50;
             timer.Start();
 
             timer.Tick += new EventHandler((o, ev) =>
             {
-                arrow.Location = new Point(arrow.Location.X + sizeOfSides * characterDir[0], arrow.Location.Y + sizeOfSides * characterDir[1]);
-                i++;
-                killEnemy(arrow);
+                if (isWall(sizeOfSides * characterDir[0], sizeOfSides * characterDir[1], arrow))
+                {
+                    arrow.Location = new Point(arrow.Location.X + sizeOfSides * characterDir[0], arrow.Location.Y + sizeOfSides * characterDir[1]);
+                    i++;
+                    killEnemy(arrow);
 
-                arrow.BringToFront();
-                arrow.BackgroundImage = background.Image;
+                    arrow.BringToFront();
+                    arrow.BackgroundImage = background.Image;
 
-                if (i > 8)
+                    if (i > 8)
+                    {
+                        timer.Stop();
+                        this.Controls.Remove(arrow);
+                        i = 0;
+                    }
+                }
+                else
                 {
                     timer.Stop();
                     this.Controls.Remove(arrow);
@@ -269,11 +486,23 @@ namespace isaac
             });
         }
 
-        private void GoDoors()
+        private void GoDoors(int x, int y)
         {
+            //if (countOfEnemies == 0)
+            //{
             level++;
-            character.Location = new Point(300, 300);
+            character.sprite.Location = new Point(300, 300);
             GenerateWorld();
+
+            //}
+            //else
+            //{
+            //    if (isWall(-x, -y, character.sprite))
+            //    {
+            //        character.sprite.Location = new Point(character.sprite.Location.X - x, character.sprite.Location.Y - y);
+
+            //    }
+            //}
         }
 
         private bool isWall(int x, int y, PictureBox person)
@@ -290,18 +519,17 @@ namespace isaac
 
         private void moveCharacter(int x, int y, string path)
         {
-            if (map[(character.Location.X) / sizeOfSides, (character.Location.Y) / sizeOfSides] == 2)
+            if (map[(character.sprite.Location.X) / sizeOfSides, (character.sprite.Location.Y) / sizeOfSides] == 2)
             {
-                GoDoors();
-
+                GoDoors(x, y);
             }
-            else if (isWall(x, y, character))
+            else if (isWall(x, y, character.sprite))
             {
                 characterDir[0] = (x / sizeOfSides);
                 characterDir[1] = (y / sizeOfSides);
 
-                character.Image = Image.FromFile(path);
-                character.Location = new Point(character.Location.X + x, character.Location.Y + y);
+                character.sprite.Image = Image.FromFile(path);
+                character.sprite.Location = new Point(character.sprite.Location.X + x, character.sprite.Location.Y + y);
             }
         }
 
@@ -335,12 +563,17 @@ namespace isaac
         {
             string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-back-2.png");
 
-            character.Image = Image.FromFile(pathForCharacterGoBack);
-            character.SizeMode = PictureBoxSizeMode.StretchImage;
-            character.Location = new Point(300, 300);
-            character.Size = new Size(sizeOfSides, sizeOfSides);
+            character.sprite.Image = Image.FromFile(pathForCharacterGoBack);
+            character.sprite.SizeMode = PictureBoxSizeMode.StretchImage;
+            character.sprite.Location = new Point(300, 300);
+            character.sprite.Size = new Size(sizeOfSides, sizeOfSides);
 
-            this.Controls.Add(character);
+            character.HitPoints = 300;
+            character.killedEnemies = 0;
+
+            createStats(level, character.killedEnemies, character.HitPoints);
+
+            this.Controls.Add(character.sprite);
         }
 
         Random rnd = new Random();
@@ -359,14 +592,6 @@ namespace isaac
 
         private void DestroyMap()
         {
-            //for (int i = 0; i < 25; i++)
-            //{
-            //    for (int j = 0; j < 25; j++)
-            //    {
-            //        w.Write(map[i, j] + " ");
-            //    }
-            //    w.Write("\n");
-            //}
             Array.Clear(map, 0, map.Length);
             this.Controls.Clear();
         }
@@ -386,7 +611,7 @@ namespace isaac
                 {
                     if (i == 0)
                     {
-                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2)
+                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && j != 0 && j != 24)
                         {
                             GenerateDoors(i, j);
                             map[i, j] = 2;
@@ -409,7 +634,7 @@ namespace isaac
                     }
                     else if (i == 24)
                     {
-                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2)
+                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && j != 0 && j != 24)
                         {
                             GenerateDoors(i, j);
                             map[i, j] = 2;
@@ -432,7 +657,7 @@ namespace isaac
                     }
                     else if (j == 0)
                     {
-                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2)
+                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && i != 0 && i != 24)
                         {
                             GenerateDoors(i, j);
                             map[i, j] = 2;
@@ -455,7 +680,7 @@ namespace isaac
                     }
                     else if (j == 24)
                     {
-                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2)
+                        if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && i != 0 && i != 24)
                         {
                             GenerateDoors(i, j);
                             map[i, j] = 2;
@@ -464,53 +689,55 @@ namespace isaac
                         }
                         else
                         {
-                            PictureBox borderDown = new PictureBox();
+                            if (countOfDoors == 0)
+                            {
+                                GenerateDoors(i, j);
+                                map[i, j] = 2;
 
-                            borderDown.Image = Image.FromFile(path);
-                            borderDown.SizeMode = PictureBoxSizeMode.StretchImage;
+                                countOfDoors++;
+                            }
+                            else
+                            {
 
-                            borderDown.Location = new Point(i * sizeOfSides, j * sizeOfSides);
-                            borderDown.Size = new Size(sizeOfSides, sizeOfSides);
-                            this.Controls.Add(borderDown);
+                                PictureBox borderDown = new PictureBox();
 
-                            map[i, j] = 1;
+                                borderDown.Image = Image.FromFile(path);
+                                borderDown.SizeMode = PictureBoxSizeMode.StretchImage;
+
+                                borderDown.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                                borderDown.Size = new Size(sizeOfSides, sizeOfSides);
+                                this.Controls.Add(borderDown);
+
+                                map[i, j] = 1;
+                            }
                         }
 
                     }
                     else
                     {
-                        if (rnd.Next(1, 100) < 10)
+                        if (map[i - 1, j] != 2 && map[i + 1, j] != 2 && map[i, j + 1] != 2 && map[i, j - 1] != 2)
                         {
-                            PictureBox dirt = new PictureBox();
+                            if (rnd.Next(1, 100) < 10)
+                            {
+                                PictureBox dirt = new PictureBox();
 
-                            dirt.Image = Image.FromFile(pathForStoneMoss);
-                            dirt.SizeMode = PictureBoxSizeMode.StretchImage;
+                                dirt.Image = Image.FromFile(pathForStoneMoss);
+                                dirt.SizeMode = PictureBoxSizeMode.StretchImage;
 
-                            dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
-                            dirt.Size = new Size(sizeOfSides, sizeOfSides);
-                            this.Controls.Add(dirt);
+                                dirt.Location = new Point(i * sizeOfSides, j * sizeOfSides);
+                                dirt.Size = new Size(sizeOfSides, sizeOfSides);
+                                this.Controls.Add(dirt);
 
-                            map[i, j] = 1;
-                        }
-                        else
-                        {
-                            map[i, j] = 0;
+                                map[i, j] = 1;
+                            }
+                            else
+                            {
+                                map[i, j] = 0;
+                            }
                         }
                     }
                 }
             }
-
-            //using( StreamWriter w = new StreamWriter(@"file.txt"))
-            //{
-            //    for (int i = 0; i < 24; i++)
-            //    {
-            //        for (int j = 0; j < 24; j++)
-            //        {
-            //            w.Write(map[i, j] + " ");
-            //        }
-            //        w.Write("\n");
-            //    }
-            //}
         }
     }
 }

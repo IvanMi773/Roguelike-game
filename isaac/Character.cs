@@ -7,10 +7,12 @@ using System.Windows.Forms;
 
 namespace isaac
 {
-    class Enemy1
+    class Character
     {
-        public int HitPoints = 100;
-        public int damage = 50;
+        public int HitPoints = 300;
+        public int damage = 100;
+
+        public int killedEnemies = 0;
 
         public PictureBox sprite = new PictureBox();
     }
