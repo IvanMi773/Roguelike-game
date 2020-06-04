@@ -63,6 +63,16 @@ namespace isaac.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap back {
+            get {
+                object obj = ResourceManager.GetObject("back", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap dirt {
             get {
                 object obj = ResourceManager.GetObject("dirt", resourceCulture);
@@ -86,6 +96,26 @@ namespace isaac.Properties {
         internal static System.Drawing.Bitmap waterfall_1 {
             get {
                 object obj = ResourceManager.GetObject("waterfall-1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap waterfall_2 {
+            get {
+                object obj = ResourceManager.GetObject("waterfall-2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap waterfall_3 {
+            get {
+                object obj = ResourceManager.GetObject("waterfall-3", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

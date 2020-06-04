@@ -18,31 +18,27 @@ namespace isaac
 
         private int width = 770 + 300;
         private int height = 790;
-
         private int sizeOfSides = 30;
 
         private int[,] map = new int[25, 25];
+
         private Enemy1[] enemyList;
         private int[,] enemyLocations;
-        //private int[] enemyLocationsX = new int[30];
-        //private int[] enemyLocationsY = new int[30];
         private int countOfEnemies = 0;
 
         private int[] characterDir = new int[2];
 
         Character character = new Character();
 
-        string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-1.png");
+        string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-3.png");
 
         string pathForCharacterGoFont = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-front-2.png");
         string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-back-2.png");
         string pathForCharacterGoSideLeft = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-side-left-2.png");
         string pathForCharacterGoSideRight = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-side-right-2.png");
 
-        string pathForCharacterShotFont = System.IO.Path.GetFullPath(@"textures\hero\attack\hero-attack-front-weapon-3.png");
-        string pathForCharacterShotBack = System.IO.Path.GetFullPath(@"textures\hero\attack\hero-attack-back-weapon-2.png");
-        string pathForCharacterShotSideLeft = System.IO.Path.GetFullPath(@"textures\hero\attack\hero-attack-side-left-weapon-3.png");
-        string pathForCharacterShotSideRight = System.IO.Path.GetFullPath(@"textures\hero\attack\hero-attack-side-right-weapon-3.png");
+        string pathForFullHeart = System.IO.Path.GetFullPath(@"textures\hearts-1.png");
+        string pathForEmptyHeart = System.IO.Path.GetFullPath(@"textures\hearts-2.png");
 
         string pathForEnemy1Font = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-front-4.png");
         string pathForEnemy1Back = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-back-4.png");
@@ -415,21 +411,12 @@ namespace isaac
 
         private void GoDoors(int x, int y)
         {
-            //if (countOfEnemies == 0)
-            //{
-            level++;
-            character.sprite.Location = new Point(300, 300);
-            GenerateWorld();
-
-            //}
-            //else
-            //{
-            //    if (isWall(-x, -y, character.sprite))
-            //    {
-            //        character.sprite.Location = new Point(character.sprite.Location.X - x, character.sprite.Location.Y - y);
-
-            //    }
-            //}
+            if (countOfEnemies <= 0)
+            {
+                level++;
+                character.sprite.Location = new Point(300, 300);
+                GenerateWorld();
+            }
         }
 
         private bool isWall(int x, int y, PictureBox person)
@@ -446,7 +433,7 @@ namespace isaac
 
         private void moveCharacter(int x, int y, string path)
         {
-            if (map[(character.sprite.Location.X) / sizeOfSides, (character.sprite.Location.Y) / sizeOfSides] == 2)
+            if (map[(character.sprite.Location.X + x) / sizeOfSides, (character.sprite.Location.Y + y) / sizeOfSides] == 2)
             {
                 GoDoors(x, y);
             }
