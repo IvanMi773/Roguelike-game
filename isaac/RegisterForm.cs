@@ -13,26 +13,12 @@ namespace isaac
 {
     public partial class RegisterForm : Form
     {
-        XmlDocument xDoc = new XmlDocument();
-        private bool isRegistered = false;
         private int id = 0;
+        WorkWithXml xml = new WorkWithXml();
 
         public RegisterForm()
         {
             InitializeComponent();
-
-            ControlBox = false;
-
-            xDoc.Load(@"database/users.xml");
-        }
-
-        private void OnClosing(object sender, FormClosingEventArgs e)
-        {
-            if (!isRegistered)
-            {
-                base.OnClosing(e);
-                e.Cancel = true;
-            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -94,8 +80,6 @@ namespace isaac
             errorValidation.Visible = false;
             errorValidation1.Visible = false;
 
-            int logined = 0;
-
             errorValidation.Text = "";
             errorValidation1.Text = "";
 
@@ -104,33 +88,12 @@ namespace isaac
 
             if (passwordValidation(password) == "" && usernameValidation(username) == "")
             {
-                XmlElement xRoot = xDoc.DocumentElement;
+                id = xml.Login(username, password);
 
-                foreach (XmlNode node in xRoot)
+                if (id != 0)
                 {
-                    foreach (XmlNode childnode in node.ChildNodes)
-                    {
-                        if (childnode.Name == "username")
-                        {
-                            if (username == childnode.InnerText)
-                            {
-                                logined++;
-                            }
-                        }
-
-                        if (childnode.Name == "password")
-                        {
-                            if (password == childnode.InnerText)
-                            {
-                                logined++;
-                            }
-                        }
-                    }
-                }
-
-                if (logined == 2)
-                {
-                    isRegistered = true;
+                    Form1 form = new Form1(id);
+                    form.ShowDialog();
 
                     this.Close();
                 }
@@ -167,34 +130,10 @@ namespace isaac
 
             if (passwordValidation(password) == "" && usernameValidation(username) == "")
             {
-                XmlElement xRoot = xDoc.DocumentElement;
+                id = xml.Register(username, password);
 
-                foreach (XmlNode node in xRoot)
-                {
-                    XmlNode attr = node.Attributes.GetNamedItem("id");
-                    if (attr != null)
-                        id = Convert.ToInt32(attr.Value);
-                }
-
-                XmlAttribute idAttr = xDoc.CreateAttribute("id");
-                XmlElement userElem = xDoc.CreateElement("user");
-                XmlElement usernameElem = xDoc.CreateElement("username");
-                XmlElement passwordElem = xDoc.CreateElement("password");
-
-                XmlText usernameText = xDoc.CreateTextNode(username);
-                XmlText passwordText = xDoc.CreateTextNode(password);
-                XmlText idText = xDoc.CreateTextNode((++id).ToString());
-
-                idAttr.AppendChild(idText);
-                usernameElem.AppendChild(usernameText);
-                passwordElem.AppendChild(passwordText);
-                userElem.AppendChild(usernameElem);
-                userElem.Attributes.Append(idAttr);
-                userElem.AppendChild(passwordElem);
-                xRoot.AppendChild(userElem);
-                xDoc.Save(@"database/users.xml");
-
-                isRegistered = true;
+                Form1 form = new Form1(id);
+                form.ShowDialog();
 
                 this.Close();
             } else

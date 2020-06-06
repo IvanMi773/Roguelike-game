@@ -255,7 +255,6 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "RegisterForm";
             this.Text = "Авторизація";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

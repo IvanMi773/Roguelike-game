@@ -14,6 +14,7 @@ namespace isaac
 {
     public partial class Form1 : Form
     {
+
         PictureBox background = new PictureBox();
 
         private int width = 770 + 300;
@@ -45,10 +46,15 @@ namespace isaac
         string pathForEnemy1Left = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-side-left-4.png");
         string pathForEnemy1Right = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-side-right-4.png");
 
-        Timer enemyTimer;
+        private int currentUserId = 0;
 
-        public Form1()
+        Timer enemyTimer;
+        WorkWithXml xml = new WorkWithXml();
+
+        public Form1(int id)
         {
+            this.currentUserId = id;
+
             InitializeComponent();
 
             this.Width = width;
@@ -72,7 +78,7 @@ namespace isaac
         {
             level = 1;
             timer.Stop();
-            //enemyTimer.Stop();
+            
             MessageBox.Show("You are dead", "Defeat");
             GenerateWorld();
         }
@@ -90,6 +96,11 @@ namespace isaac
                 {
                     character.HitPoints -= enemyList[i].damage;
                     createStats(level, character.killedEnemies, character.HitPoints);
+
+                    if (character.HitPoints >= 0)
+                    {
+                        this.Controls.Remove(hearts[character.HitPoints / 50]);
+                    }
 
                     if (character.HitPoints == 0)
                     {
@@ -111,21 +122,6 @@ namespace isaac
 
                         enemyList = enemyList.Where(item => item != enemyList[i]).ToArray();
 
-                        int t;
-                        for (int j = 0; j < enemyLocations.GetLength(0); j++)
-                        {
-                            for (int s = t = 0; s < 2; s++, t++)
-                            {
-                                if (j == i)
-                                {
-                                    t++;
-                                    continue;
-                                }
-
-                                enemyLocations[j, s] = enemyLocations[t, s];
-                            }
-                        }
-
                         countOfEnemies--;
                         character.killedEnemies++;
                         createStats(level, character.killedEnemies, character.HitPoints);
@@ -139,32 +135,42 @@ namespace isaac
             }
         }
 
+        PictureBox[] hearts = new PictureBox[6];
+
         Label levelLabel = new Label();
         Label killedEnemiesLabel = new Label();
-        Label hpLabel = new Label();
         Label countOfEnemiesLabel = new Label();
+        Label usernameLabel = new Label();
 
         private void createStats(int lev, int killed, int hp)
         {
+            usernameLabel.Text = xml.GetUserById(currentUserId).ToString();
+            usernameLabel.Size = new Size(100, 30);
+            usernameLabel.Location = new Point(width - 250, 10);
+            usernameLabel.Font = new Font(usernameLabel.Font.Name, 20, FontStyle.Bold);
+            this.Controls.Add(usernameLabel);
+            usernameLabel.Refresh();
+
             levelLabel.Text = "Рівень: " + lev.ToString();
-            levelLabel.Location = new Point(width - 250, 10);
+            levelLabel.Location = new Point(width - 250, 70);
+            levelLabel.Size = new Size(100, 25);
+            levelLabel.Font = new Font(levelLabel.Font.Name, 14, FontStyle.Regular);
             this.Controls.Add(levelLabel);
             levelLabel.Refresh();
-
+            
             killedEnemiesLabel.Text = "Вбито: " + killed.ToString();
-            killedEnemiesLabel.Location = new Point(width - 250, 40);
+            killedEnemiesLabel.Location = new Point(width - 250, 160);
+            killedEnemiesLabel.Size = new Size(100, 25);
+            killedEnemiesLabel.Font = new Font(killedEnemiesLabel.Font.Name, 12, FontStyle.Regular);
             this.Controls.Add(killedEnemiesLabel);
             killedEnemiesLabel.Refresh();
 
             countOfEnemiesLabel.Text = "Потрібно вбити: " + countOfEnemies.ToString();
-            countOfEnemiesLabel.Location = new Point(width - 250, 70);
+            countOfEnemiesLabel.Location = new Point(width - 250, 185);
+            countOfEnemiesLabel.Size = new Size(150, 25);
+            countOfEnemiesLabel.Font = new Font(countOfEnemiesLabel.Font.Name, 12, FontStyle.Regular);
             this.Controls.Add(countOfEnemiesLabel);
             countOfEnemiesLabel.Refresh();
-
-            hpLabel.Text = "Здоровя: " + hp.ToString();
-            hpLabel.Location = new Point(width - 250, 100);
-            this.Controls.Add(hpLabel);
-            hpLabel.Refresh();
         }
 
         private void GenerateWorld()
@@ -174,7 +180,6 @@ namespace isaac
             enemyTimer.Start();
 
             timer = new Timer();
-            //timer.Stop();
 
             DestroyMap();
             GenerateEnemies();
@@ -221,9 +226,6 @@ namespace isaac
                     {
                         enemy.Image = Image.FromFile(pathForEnemy1Left);
                         enemy.Location = new Point(enemy.Location.X + (directions[0, 0] * x), enemy.Location.Y + (directions[0, 1] * y));
-
-                        enemyLocations[id, 0] = enemy.Location.X;
-                        enemyLocations[id, 1] = enemy.Location.Y;
                     }
                 }
                 else
@@ -233,9 +235,6 @@ namespace isaac
                     {
                         enemy.Image = Image.FromFile(pathForEnemy1Right);
                         enemy.Location = new Point(enemy.Location.X + (directions[1, 0] * x), enemy.Location.Y + (directions[1, 1] * y));
-
-                        enemyLocations[id, 0] = enemy.Location.X;
-                        enemyLocations[id, 1] = enemy.Location.Y;
                     }
                 }
             }
@@ -248,9 +247,6 @@ namespace isaac
                     {
                         enemy.Image = Image.FromFile(pathForEnemy1Back);
                         enemy.Location = new Point(enemy.Location.X + (directions[2, 0] * x), enemy.Location.Y + (directions[2, 1] * y));
-
-                        enemyLocations[id, 0] = enemy.Location.X;
-                        enemyLocations[id, 1] = enemy.Location.Y;
                     }
                 }
                 else
@@ -260,34 +256,16 @@ namespace isaac
                     {
                         enemy.Image = Image.FromFile(pathForEnemy1Font);
                         enemy.Location = new Point(enemy.Location.X + (directions[3, 0] * x), enemy.Location.Y + (directions[3, 1] * y));
-
-                        enemyLocations[id, 0] = enemy.Location.X;
-                        enemyLocations[id, 1] = enemy.Location.Y;
                     }
                 }
             }
 
             for (int j = 0; j < enemyList.Length; j++)
             {
-                if (enemyLocations[j, 0] == enemy.Location.X && enemyLocations[j, 1] == enemy.Location.Y && j != id)
+                if (enemyList[j].sprite.Location.X == enemy.Location.X && enemyList[j].sprite.Location.Y == enemy.Location.Y && j != id)
                 {
                     this.Controls.Remove(enemyList[j].sprite);
                     enemyList = enemyList.Where(item => item != enemyList[j]).ToArray();
-
-                    int t;
-                    for (int i = 0; i < enemyLocations.GetLength(0); i++)
-                    {
-                        for (int s = t = 0; s < 2; s++, t++)
-                        {
-                            if (i == j)
-                            {
-                                t++;
-                                continue;
-                            }
-
-                            enemyLocations[i, s] = enemyLocations[t, s];
-                        }
-                    }
 
                     character.killedEnemies++;
                     countOfEnemies--;
@@ -295,7 +273,7 @@ namespace isaac
 
                     break;
 
-                }
+                } 
             }
 
             getDamage();
@@ -307,7 +285,7 @@ namespace isaac
 
             var places = new int[] { sizeOfSides * 2, sizeOfSides * 3, sizeOfSides * 4, sizeOfSides * 5, sizeOfSides * 6, sizeOfSides * 7, sizeOfSides * 8, sizeOfSides * 9, sizeOfSides * 10, sizeOfSides * 11, sizeOfSides * 12, sizeOfSides * 13, sizeOfSides * 14, sizeOfSides * 15, sizeOfSides * 16, sizeOfSides * 17, sizeOfSides * 18, sizeOfSides * 19, sizeOfSides * 20, sizeOfSides * 21, sizeOfSides * 22, sizeOfSides * 23 };
 
-            enemyList = new Enemy1[rnd.Next(2, 7)];
+            enemyList = new Enemy1[rnd.Next(1 + level, 6 + level)];
             enemyLocations = new int[enemyList.Length, 2];
 
             for (int i = 0; i < enemyList.Length; i++)
@@ -487,10 +465,24 @@ namespace isaac
 
             createStats(level, character.killedEnemies, character.HitPoints);
 
+            for (int i = 0; i < character.HitPoints; i += 50)
+            {
+                PictureBox heart = new PictureBox();
+                heart.Image = Image.FromFile(pathForFullHeart);
+                heart.SizeMode = PictureBoxSizeMode.StretchImage;
+                heart.Location = new Point(width - 250 + i / 2, 120);
+                heart.Size = new Size(25, 25);
+
+                hearts[i / 50] = heart;
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                this.Controls.Add(hearts[i]);
+            }
+
             this.Controls.Add(character.sprite);
         }
-
-        Random rnd = new Random();
 
         private void GenerateDoors(int i, int j)
         {
