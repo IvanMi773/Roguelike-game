@@ -1,4 +1,5 @@
-﻿using System;
+﻿using isaac.Memento;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,5 +16,18 @@ namespace isaac
         public int killedEnemies = 0;
 
         public PictureBox sprite = new PictureBox();
+
+        public HeroMemento SaveState()
+        {
+            return new HeroMemento(HitPoints, damage, killedEnemies, sprite);
+        }
+
+        public void RestoreState(HeroMemento memento)
+        {
+            this.HitPoints = memento.HitPoints;
+            this.damage = memento.Damage;
+            this.killedEnemies = memento.KilledEnemies;
+            this.sprite = memento.sprite;
+        }
     }
 }

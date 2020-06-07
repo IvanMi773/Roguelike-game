@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace isaac
 {
@@ -11,9 +12,9 @@ namespace isaac
     {
         XmlDocument xDoc = new XmlDocument();
 
-        public WorkWithXml()
+        public WorkWithXml(string filename)
         {
-            xDoc.Load(@"database/users.xml");
+            xDoc.Load(@"database/" + filename);
         }
 
         public int Register(string username, string password)

@@ -14,7 +14,7 @@ namespace isaac
     public partial class RegisterForm : Form
     {
         private int id = 0;
-        WorkWithXml xml = new WorkWithXml();
+        WorkWithXml xml = new WorkWithXml("users.xml");
 
         public RegisterForm()
         {
