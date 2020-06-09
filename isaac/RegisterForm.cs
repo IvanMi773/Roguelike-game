@@ -1,4 +1,5 @@
-﻿using System;
+﻿using isaac.Game;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -92,10 +93,10 @@ namespace isaac
 
                 if (id != 0)
                 {
-                    Form1 form = new Form1(id);
+                    LaunchForm form = new LaunchForm(id);
                     form.ShowDialog();
 
-                    this.Close();
+                    this.Hide();
                 }
                 else
                 {
@@ -132,10 +133,10 @@ namespace isaac
             {
                 id = xml.Register(username, password);
 
-                Form1 form = new Form1(id);
+                LaunchForm form = new LaunchForm(id);
                 form.ShowDialog();
 
-                this.Close();
+                this.Hide();
             } else
             {
                 errorValidation.Text = usernameValidation(username);

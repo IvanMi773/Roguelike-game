@@ -1,4 +1,6 @@
-﻿using isaac.Memento;
+﻿using isaac.Instances;
+using isaac.Memento;
+using isaac.Game;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,6 +23,8 @@ namespace isaac
         private int height = 790;
         private int sizeOfSides = 30;
 
+        private int score = 0;
+
         Map Map = new Map();
         MapMemento MapState;
 
@@ -37,6 +41,7 @@ namespace isaac
         GameMemento GameState;
 
         string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-3.png");
+        string pathForBackground2 = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-2.png");
 
         string pathForCharacterGoFont = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-front-2.png");
         string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-back-2.png");
@@ -44,7 +49,6 @@ namespace isaac
         string pathForCharacterGoSideRight = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-side-right-2.png");
 
         string pathForFullHeart = System.IO.Path.GetFullPath(@"textures\hearts-1.png");
-        string pathForEmptyHeart = System.IO.Path.GetFullPath(@"textures\hearts-2.png");
 
         string pathForEnemy1Font = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-front-4.png");
         string pathForEnemy1Back = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-back-4.png");
@@ -61,7 +65,7 @@ namespace isaac
         Timer enemyTimer;
         WorkWithXml xml = new WorkWithXml("users.xml");
 
-        public Form1(int id)
+        public Form1(int id, string GameSavePath = null)
         {
             this.currentUserId = id;
 
@@ -70,26 +74,155 @@ namespace isaac
             this.Width = width;
             this.Height = height;
 
-            this.KeyDown += new KeyEventHandler(keyPress);
+            RestoreGame(GameSavePath);
 
-            GenerateWorld();
+
+            this.KeyDown += new KeyEventHandler(keyPress);
 
             enemyTimer = new Timer();
             enemyTimer.Tick += new EventHandler(moveEnemies);
             enemyTimer.Interval = 500;
             enemyTimer.Start();
+
+            GameSavePath = null;
         }
 
         private int level = 1;
+
+        private void RestoreGame(string gamePath)
+        {
+            if (gamePath != null)
+            {
+                WorkWithXml savedData = new WorkWithXml("gamesaves/" + gamePath);
+
+                characterState = savedData.ReadCharacterDataFromFile();
+                character.RestoreState(characterState);
+                character.SaveState();
+
+                GameState = savedData.ReadGameDataFromFile();
+                level = GameState.level;
+                score = GameState.score;
+
+                Map = savedData.ReadMapDataFromFile();
+                Map.SaveState();
+
+                for (int i = 0; i < 25; i++)
+                {
+                    for (int j = 0; j < 25; j++)
+                    {
+                        if (Map.map[i, j] == 1)
+                        {
+                            GenerateBorder(i, j);
+                        }
+                        else if (Map.map[i, j] == 2)
+                        {
+                            GenerateDoors(i, j);
+                        }
+                    }
+                }
+
+                enemyStateList = savedData.ReadEnemyDataFromFile();
+                enemyList = new Enemy1[enemyStateList.Length];
+
+                for (int i = 0; i < enemyStateList.Length; i++)
+                {
+                    if (enemyStateList[i] == null)
+                    {
+                        break;
+                    }
+                    enemyList[i] = new Enemy1(enemyStateList[i].id, enemyStateList[i].HitPoints, enemyStateList[i].damage, enemyStateList[i].Name, enemyStateList[i].sprite);
+                    this.Controls.Add(enemyList[i].sprite);
+                }
+
+                GenerateWorld(true);
+            }
+            else
+            {
+                GenerateWorld(false);
+
+                PictureBox sprite = new PictureBox();
+                sprite.Image = Image.FromFile(pathForCharacterGoBack);
+                sprite.SizeMode = PictureBoxSizeMode.StretchImage;
+                sprite.Location = new Point(300, 300);
+                sprite.Size = new Size(sizeOfSides, sizeOfSides);
+
+                characterState = new HeroMemento(300, 100, 0, sprite);
+            }
+        }
+
+        private void GenerateWorld(bool isFirstGame)
+        {
+            countOfEnemies = 0;
+
+            enemyTimer = new Timer();
+            enemyTimer.Start();
+
+            timer = new Timer();
+
+
+            if (!isFirstGame)
+            {
+
+                GenerateMap();
+                GenerateEnemies();
+
+            }
+
+            GameState = new GameMemento(level, countOfEnemies, xml.GetUserById(currentUserId), score);
+            GenerateCharacter();
+
+            createStats(level, character.killedEnemies);
+
+            saveBtn.Location = new Point(width - 300, 700);
+            saveBtn.Size = new Size(120, 40);
+            saveBtn.BackgroundImage = Image.FromFile(pathForBackground2);
+            saveBtn.FlatStyle = FlatStyle.Popup;
+            saveBtn.Font = new Font(saveBtn.Font.Name, 13, FontStyle.Bold);
+            saveBtn.ForeColor = Color.White;
+            saveBtn.Enabled = false;
+            saveBtn.Text = "Зберегти";
+            saveBtn.Click += new EventHandler((o, ev) =>
+            {
+                history.CreateGameSave(characterState, enemyStateList, MapState, GameState);
+                saveBtn.Enabled = false;
+                exitBtn.Enabled = false;
+            });
+            this.Controls.Add(saveBtn);
+
+            exitBtn.Location = new Point(width - 170, 700);
+            exitBtn.Size = new Size(120, 40);
+            exitBtn.BackgroundImage = Image.FromFile(pathForBackground2);
+            exitBtn.FlatStyle = FlatStyle.Popup;
+            exitBtn.Font = new Font(exitBtn.Font.Name, 13, FontStyle.Bold);
+            exitBtn.ForeColor = Color.White;
+            exitBtn.Text = "Вийти";
+            exitBtn.Enabled = false;
+            exitBtn.Click += new EventHandler((o, ev) =>
+            {
+                Application.Exit();
+            });
+            this.Controls.Add(exitBtn);
+
+            background.Image = Image.FromFile(pathForBackground);
+            background.Location = new Point(0, 0);
+            background.Size = new Size(750, 750);
+            background.SizeMode = PictureBoxSizeMode.StretchImage;
+            background.BringToFront();
+            this.Controls.Add(background);
+
+            character.sprite.BackgroundImage = background.Image;
+        }
 
         private void GameOver()
         {
             level = 1;
             character.killedEnemies = 0;
+            character.HitPoints = 300;
+            score = 0;
             timer.Stop();
-            
+
             MessageBox.Show("You are dead", "Defeat");
-            GenerateWorld();
+            GenerateWorld(false);
         }
 
         private void getDamage()
@@ -112,7 +245,8 @@ namespace isaac
                         if (enemyList[i].Name == "enemy1")
                         {
                             this.Controls.Remove(hearts[character.HitPoints / 50]);
-                        } else
+                        }
+                        else
                         {
                             this.Controls.Remove(hearts[character.HitPoints / 50]);
                             this.Controls.Remove(hearts[(character.HitPoints + 50) / 50]);
@@ -135,7 +269,6 @@ namespace isaac
             enemyStateList = enemyStateList.Where(item => item.id != enemy.id).ToArray();
 
             countOfEnemies--;
-            character.killedEnemies++;
             createStats(level, character.killedEnemies);
         }
 
@@ -143,18 +276,34 @@ namespace isaac
         {
             for (int i = 0; i < enemyList.Length; i++)
             {
+                if (enemyList[i] == null)
+                {
+                    break;
+                }
+
                 if (arrow.Location == enemyList[i].sprite.Location)
                 {
                     enemyList[i].HitPoints -= character.damage;
 
                     if (enemyList[i].HitPoints == 0)
                     {
+                        if (enemyList[i].Name == "enemy1")
+                        {
+                            score += 100;
+                        }
+                        else if (enemyList[i].Name == "enemy2")
+                        {
+                            score += 300;
+                        }
+
+                        character.killedEnemies++;
                         removeEnemy(enemyList[i]);
-                        characterState = character.SaveState(); 
-                        GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId));
+                        characterState = character.SaveState();
+                        GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
 
                         break;
-                    } else
+                    }
+                    else
                     {
                         break;
                     }
@@ -168,10 +317,6 @@ namespace isaac
         Label killedEnemiesLabel = new Label();
         Label countOfEnemiesLabel = new Label();
         Label usernameLabel = new Label();
-
-        ListBox list = new ListBox();
-
-        Button btn = new Button();
 
         private void createStats(int lev, int killed)
         {
@@ -188,7 +333,7 @@ namespace isaac
             levelLabel.Font = new Font(levelLabel.Font.Name, 14, FontStyle.Regular);
             this.Controls.Add(levelLabel);
             levelLabel.Refresh();
-            
+
             killedEnemiesLabel.Text = "Вбито: " + killed.ToString();
             killedEnemiesLabel.Location = new Point(width - 250, 160);
             killedEnemiesLabel.Size = new Size(100, 25);
@@ -196,61 +341,16 @@ namespace isaac
             this.Controls.Add(killedEnemiesLabel);
             killedEnemiesLabel.Refresh();
 
-            countOfEnemiesLabel.Text = "Потрібно вбити: " + countOfEnemies.ToString();
+            countOfEnemiesLabel.Text = "Очки: " + score.ToString();
             countOfEnemiesLabel.Location = new Point(width - 250, 185);
             countOfEnemiesLabel.Size = new Size(150, 25);
             countOfEnemiesLabel.Font = new Font(countOfEnemiesLabel.Font.Name, 12, FontStyle.Regular);
             this.Controls.Add(countOfEnemiesLabel);
             countOfEnemiesLabel.Refresh();
-
-            btn.Location = new Point(width - 250, 600);
-            btn.Click += new EventHandler((o, ev) => {
-                history.CreateGameSave(characterState, enemyStateList, MapState, GameState);
-            });
-            this.Controls.Add(btn);
-
-            //list.Items.Clear();
-
-            //list.Location = new Point(width - 250, 250);
-            //list.Size = new Size(200, 200);
-            //if (characterState != null)
-            //{
-            //    list.Items.Add(characterState.HitPoints);
-            //    list.Items.Add(characterState.KilledEnemies);
-            //}
-            //this.Controls.Add(list);
         }
 
-        private void Btn_Click(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void GenerateWorld()
-        {
-            countOfEnemies = 0;
-            enemyTimer = new Timer();
-            enemyTimer.Start();
-
-            timer = new Timer();
-
-            GameState = new GameMemento(level, countOfEnemies, xml.GetUserById(currentUserId));
-
-            DestroyMap();
-            GenerateEnemies();
-            GenerateCharacter();
-            GenerateMap();
-            createStats(level, character.killedEnemies);
-
-            background.Image = Image.FromFile(pathForBackground);
-            background.Location = new Point(0, 0);
-            background.Size = new Size(750, 750);
-            background.SizeMode = PictureBoxSizeMode.StretchImage;
-            background.BringToFront();
-            this.Controls.Add(background);
-
-            character.sprite.BackgroundImage = background.Image;
-        }
+        Button saveBtn = new Button();
+        Button exitBtn = new Button();
 
         private void moveEnemies(Object myObject, EventArgs eventArgs)
         {
@@ -282,7 +382,8 @@ namespace isaac
                         if (enemy.Name == "enemy1")
                         {
                             enemy.sprite.Image = Image.FromFile(pathForEnemy1Left);
-                        } else
+                        }
+                        else
                         {
                             enemy.sprite.Image = Image.FromFile(pathForEnemy2Left);
                         }
@@ -348,12 +449,17 @@ namespace isaac
 
             for (int j = 0; j < enemyList.Length; j++)
             {
+                if (enemyList[j] == null)
+                {
+                    break;
+                }
+
                 if (enemyList[j].sprite.Location.X == enemy.sprite.Location.X && enemyList[j].sprite.Location.Y == enemy.sprite.Location.Y && j != id)
                 {
                     removeEnemy(enemyList[j]);
 
                     break;
-                } 
+                }
             }
 
             getDamage();
@@ -367,7 +473,7 @@ namespace isaac
             Random rndX = new Random();
             Random rndY = new Random();
 
-            var places = new int[] { sizeOfSides * 2, sizeOfSides * 3, sizeOfSides * 4, sizeOfSides * 5, sizeOfSides * 6, sizeOfSides * 7, sizeOfSides * 8, sizeOfSides * 9, sizeOfSides * 10, sizeOfSides * 11, sizeOfSides * 12, sizeOfSides * 13, sizeOfSides * 14, sizeOfSides * 15, sizeOfSides * 16, sizeOfSides * 17, sizeOfSides * 18, sizeOfSides * 19, sizeOfSides * 20, sizeOfSides * 21, sizeOfSides * 22, sizeOfSides * 23 };
+            var places = new int[] { sizeOfSides * 2, sizeOfSides * 3, sizeOfSides * 4, sizeOfSides * 5, sizeOfSides * 6, sizeOfSides * 7, sizeOfSides * 8, sizeOfSides * 12, sizeOfSides * 13, sizeOfSides * 14, sizeOfSides * 15, sizeOfSides * 16, sizeOfSides * 17, sizeOfSides * 18, sizeOfSides * 19, sizeOfSides * 20, sizeOfSides * 21, sizeOfSides * 22, sizeOfSides * 23 };
 
             int enemy1HitPoints = 100;
             int enemy1Damage = 50;
@@ -385,13 +491,14 @@ namespace isaac
             {
                 Enemy1 enemy;
 
-                if (rnd.Next(1, 10) == 1)
+                if (rnd.Next(1, 10) <= 1 + level)
                 {
                     PictureBox enemy2Sprite = new PictureBox();
                     enemy2Sprite.Image = Image.FromFile(pathForEnemy2Back);
                     enemy2Sprite.SizeMode = PictureBoxSizeMode.StretchImage;
                     enemy = new Enemy1(id, enemy2HitPoints, enemy2Damage, "enemy2", enemy2Sprite);
-                } else
+                }
+                else
                 {
                     PictureBox enemy1Sprite = new PictureBox();
                     enemy1Sprite.Image = Image.FromFile(pathForEnemy1Back);
@@ -427,7 +534,7 @@ namespace isaac
                 countOfEnemies++;
                 enemyList[i] = enemy;
                 enemyStateList[i] = enemy.SaveState();
-                GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId));
+                //GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
 
                 id++;
             }
@@ -500,9 +607,10 @@ namespace isaac
             if (countOfEnemies <= 0)
             {
                 level++;
+                score += 100 * level;
                 character.sprite.Location = new Point(300, 300);
-                GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId));
-                GenerateWorld();
+                GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
+                GenerateWorld(false);
             }
         }
 
@@ -558,18 +666,14 @@ namespace isaac
                     shot();
                     break;
             }
+
+            saveBtn.Enabled = true;
+            exitBtn.Enabled = true;
         }
 
         private void GenerateCharacter()
         {
-            string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-back-2.png");
-
-            character.sprite.Image = Image.FromFile(pathForCharacterGoBack);
-            character.sprite.SizeMode = PictureBoxSizeMode.StretchImage;
-            character.sprite.Location = new Point(300, 300);
-            character.sprite.Size = new Size(sizeOfSides, sizeOfSides);
-
-            character.HitPoints = 300;
+            character.RestoreState(characterState);
 
             createStats(level, character.killedEnemies);
 
@@ -604,6 +708,8 @@ namespace isaac
 
         private void GenerateMap()
         {
+            DestroyMap();
+
             Map = new Map();
             Random rnd = new Random();
             int countOfDoors = 0;
@@ -734,6 +840,8 @@ namespace isaac
 
             door.Location = new Point(i * sizeOfSides, j * sizeOfSides);
             door.Size = new Size(sizeOfSides, sizeOfSides);
+            door.Parent = background;
+            door.BringToFront();
             this.Controls.Add(door);
         }
 
@@ -748,6 +856,8 @@ namespace isaac
 
             border.Location = new Point(i * sizeOfSides, j * sizeOfSides);
             border.Size = new Size(sizeOfSides, sizeOfSides);
+            border.Parent = background;
+            border.BringToFront();
             this.Controls.Add(border);
         }
     }

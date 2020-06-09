@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace isaac
+namespace isaac.Game
 {
     class GameHistory
     {
@@ -21,10 +21,12 @@ namespace isaac
             XElement game = new XElement("game");
             XElement username = new XElement("username", gameState.userName);
             XElement level = new XElement("level", gameState.level);
+            XElement score = new XElement("score", gameState.score);
             XElement countOfEnemies = new XElement("countOfEnemies", gameState.countOfEnemies);
 
             game.Add(username);
             game.Add(level);
+            game.Add(score);
             game.Add(countOfEnemies);
 
             // Character saving data
@@ -87,7 +89,7 @@ namespace isaac
             Random rnd = new Random();
             int num = rnd.Next(1000, 50000);
 
-            doc.Save(@"database/gamesaves/" + gameState.userName + "_" + gameState.level.ToString() + "_" + num + ".xml");
+            doc.Save(@"database/gamesaves/" + gameState.userName + "_" + gameState.level.ToString() + "_" + gameState.score.ToString() + ".xml");
         }
     }
 }
