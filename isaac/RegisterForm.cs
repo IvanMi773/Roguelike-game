@@ -93,10 +93,12 @@ namespace isaac
 
                 if (id != 0)
                 {
+                    this.Visible = false;
+
                     LaunchForm form = new LaunchForm(id);
                     form.ShowDialog();
 
-                    this.Hide();
+                    this.Close();
                 }
                 else
                 {
@@ -106,7 +108,6 @@ namespace isaac
                     errorValidation.Visible = true;
                     errorValidation1.Visible = true;
                 }
-
             }
             else
             {
@@ -133,10 +134,12 @@ namespace isaac
             {
                 id = xml.Register(username, password);
 
+                this.Visible = false;
+
                 LaunchForm form = new LaunchForm(id);
                 form.ShowDialog();
 
-                this.Hide();
+                this.Close();
             } else
             {
                 errorValidation.Text = usernameValidation(username);

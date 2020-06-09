@@ -35,6 +35,14 @@ namespace isaac
             dataGridView1.Columns[1].HeaderCell.Value = "Рівень";
             dataGridView1.Columns[2].HeaderCell.Value = "Очки";
 
+            if (userId != 1)
+            {
+                dataGridView1.ReadOnly = true;
+            } else
+            {
+                button2.Visible = true;
+            }
+
             GetUserGames(username);
 
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
@@ -55,7 +63,7 @@ namespace isaac
                 string[] fileName = saves[i].Split(new[] { '/' });
                 string[] userInFileName = fileName[2].Split(new[] { '_', '.' });
 
-                if (userInFileName[0] == username)
+                if (userInFileName[0] == username || userId == 1)
                 {
                     userGames[t] = fileName[2];
                     t++;
@@ -83,18 +91,38 @@ namespace isaac
         {
             currentGame = dataGridView1.CurrentCell.RowIndex;
 
-            Form1 form = new Form1(userId, userGames[currentGame]);
+            if (currentGame != 0)
+            {
+                this.Visible = false;
+
+                Form1 form = new Form1(userId, userGames[currentGame]);
+                form.ShowDialog();
+
+                this.Close();
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            this.Visible = false;
+
+            Form1 form = new Form1(userId);
             form.ShowDialog();
 
             this.Close();
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e)
         {
-            Form1 form = new Form1(userId);
-            form.ShowDialog();
+            currentGame = dataGridView1.CurrentCell.RowIndex;
 
-            this.Close();
+            if (currentGame != 0)
+            {
+                File.Delete(@"database/gamesaves/" + userGames[currentGame]);
+
+                dataGridView1.Rows.RemoveAt(currentGame);
+                dataGridView1.Refresh();
+            }
         }
     }
 }

@@ -76,7 +76,6 @@ namespace isaac
 
             RestoreGame(GameSavePath);
 
-
             this.KeyDown += new KeyEventHandler(keyPress);
 
             enemyTimer = new Timer();
@@ -139,19 +138,12 @@ namespace isaac
             else
             {
                 GenerateWorld(false);
-
-                PictureBox sprite = new PictureBox();
-                sprite.Image = Image.FromFile(pathForCharacterGoBack);
-                sprite.SizeMode = PictureBoxSizeMode.StretchImage;
-                sprite.Location = new Point(300, 300);
-                sprite.Size = new Size(sizeOfSides, sizeOfSides);
-
-                characterState = new HeroMemento(300, 100, 0, sprite);
             }
         }
 
         private void GenerateWorld(bool isFirstGame)
         {
+            //character.SaveState();
             countOfEnemies = 0;
 
             enemyTimer = new Timer();
@@ -162,14 +154,29 @@ namespace isaac
 
             if (!isFirstGame)
             {
+                PictureBox sprite = new PictureBox();
+                sprite.Image = Image.FromFile(pathForCharacterGoBack);
+                sprite.SizeMode = PictureBoxSizeMode.StretchImage;
+                sprite.Location = new Point(300, 300);
+                sprite.Size = new Size(sizeOfSides, sizeOfSides);
+
+                if (characterState != null)
+                {
+                    character.RestoreState(characterState);
+                    character.SaveState();
+                    //characterState = new HeroMemento(300, 100, 0, sprite);
+                } else
+                {
+                    characterState = new HeroMemento(300, 100, 0, sprite);
+                }
+
 
                 GenerateMap();
                 GenerateEnemies();
-
             }
+            GenerateCharacter();
 
             GameState = new GameMemento(level, countOfEnemies, xml.GetUserById(currentUserId), score);
-            GenerateCharacter();
 
             createStats(level, character.killedEnemies);
 
@@ -218,6 +225,7 @@ namespace isaac
             level = 1;
             character.killedEnemies = 0;
             character.HitPoints = 300;
+            //character.SaveState();
             score = 0;
             timer.Stop();
 
@@ -566,7 +574,6 @@ namespace isaac
             {
                 arrow.Image.RotateFlip(RotateFlipType.Rotate180FlipNone);
             }
-
 
             arrow.Size = new Size(sizeOfSides, sizeOfSides);
             this.Controls.Add(arrow);
