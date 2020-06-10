@@ -137,13 +137,22 @@ namespace isaac
             }
             else
             {
+                PictureBox sprite = new PictureBox();
+                sprite.Image = Image.FromFile(pathForCharacterGoBack);
+                sprite.SizeMode = PictureBoxSizeMode.StretchImage;
+                sprite.Location = new Point(300, 300);
+                sprite.Size = new Size(sizeOfSides, sizeOfSides);
+
+                characterState = new HeroMemento(300, 100, 0, sprite);
+                character.RestoreState(characterState);
+                characterState = character.SaveState();
+
                 GenerateWorld(false);
             }
         }
 
         private void GenerateWorld(bool isFirstGame)
         {
-            //character.SaveState();
             countOfEnemies = 0;
 
             enemyTimer = new Timer();
@@ -154,26 +163,10 @@ namespace isaac
 
             if (!isFirstGame)
             {
-                PictureBox sprite = new PictureBox();
-                sprite.Image = Image.FromFile(pathForCharacterGoBack);
-                sprite.SizeMode = PictureBoxSizeMode.StretchImage;
-                sprite.Location = new Point(300, 300);
-                sprite.Size = new Size(sizeOfSides, sizeOfSides);
-
-                if (characterState != null)
-                {
-                    character.RestoreState(characterState);
-                    character.SaveState();
-                    //characterState = new HeroMemento(300, 100, 0, sprite);
-                } else
-                {
-                    characterState = new HeroMemento(300, 100, 0, sprite);
-                }
-
-
                 GenerateMap();
                 GenerateEnemies();
             }
+ 
             GenerateCharacter();
 
             GameState = new GameMemento(level, countOfEnemies, xml.GetUserById(currentUserId), score);
@@ -222,10 +215,11 @@ namespace isaac
 
         private void GameOver()
         {
+            characterState = null;
             level = 1;
             character.killedEnemies = 0;
             character.HitPoints = 300;
-            //character.SaveState();
+            characterState = character.SaveState();
             score = 0;
             timer.Stop();
 
@@ -261,7 +255,7 @@ namespace isaac
                         }
                     }
 
-                    if (character.HitPoints == 0)
+                    if (character.HitPoints < 0)
                     {
                         GameOver();
                     }
@@ -616,6 +610,7 @@ namespace isaac
                 level++;
                 score += 100 * level;
                 character.sprite.Location = new Point(300, 300);
+                characterState = character.SaveState();
                 GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
                 GenerateWorld(false);
             }
@@ -680,6 +675,7 @@ namespace isaac
 
         private void GenerateCharacter()
         {
+            hearts = new PictureBox[6];
             character.RestoreState(characterState);
 
             createStats(level, character.killedEnemies);
