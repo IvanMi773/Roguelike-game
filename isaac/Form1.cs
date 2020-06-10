@@ -216,10 +216,18 @@ namespace isaac
         private void GameOver()
         {
             characterState = null;
-            level = 1;
-            character.killedEnemies = 0;
-            character.HitPoints = 300;
+
+            PictureBox sprite = new PictureBox();
+            sprite.Image = Image.FromFile(pathForCharacterGoBack);
+            sprite.SizeMode = PictureBoxSizeMode.StretchImage;
+            sprite.Location = new Point(300, 300);
+            sprite.Size = new Size(sizeOfSides, sizeOfSides);
+
+            characterState = new HeroMemento(300, 100, 0, sprite);
+            character.RestoreState(characterState);
             characterState = character.SaveState();
+
+            level = 1;
             score = 0;
             timer.Stop();
 
@@ -298,6 +306,21 @@ namespace isaac
                             score += 300;
                         }
 
+                        Random rnd = new Random();
+
+                        if (rnd.Next(1, 10) == 1 && enemyList[i].Name == "enemy2")
+                        {
+                            heart = new PictureBox();
+                            heart.Image = Image.FromFile(pathForFullHeart);
+                            heart.SizeMode = PictureBoxSizeMode.StretchImage;
+                            heart.BackgroundImage = background.Image;
+                            heart.Location = enemyList[i].sprite.Location;
+                            heart.Size = new Size(sizeOfSides - 10, sizeOfSides - 10);
+                            this.Controls.Add(heart);
+
+                            heart.BringToFront();
+                        }
+
                         character.killedEnemies++;
                         removeEnemy(enemyList[i]);
                         characterState = character.SaveState();
@@ -313,6 +336,7 @@ namespace isaac
             }
         }
 
+        PictureBox heart;
         PictureBox[] hearts = new PictureBox[6];
 
         Label levelLabel = new Label();
@@ -641,6 +665,39 @@ namespace isaac
 
                 character.sprite.Image = Image.FromFile(path);
                 character.sprite.Location = new Point(character.sprite.Location.X + x, character.sprite.Location.Y + y);
+
+                if (heart != null)
+                {
+                    if (character.sprite.Location == heart.Location)
+                    {
+                        if (character.HitPoints < 300)
+                        {
+                            character.HitPoints += 50;
+                            characterState = character.SaveState();
+                            character.RestoreState(characterState);
+
+                            hearts = new PictureBox[6];
+
+                            for (int i = 0; i < character.HitPoints; i += 50)
+                            {
+                                PictureBox heart = new PictureBox();
+                                heart.Image = Image.FromFile(pathForFullHeart);
+                                heart.SizeMode = PictureBoxSizeMode.StretchImage;
+                                heart.Location = new Point(width - 250 + i / 2, 120);
+                                heart.Size = new Size(25, 25);
+
+                                hearts[i / 50] = heart;
+                            }
+
+                            for (int i = 0; i < 6; i++)
+                            {
+                                this.Controls.Add(hearts[i]);
+                            }
+                        }
+
+                        this.Controls.Remove(heart);
+                    }
+                }
             }
         }
 
