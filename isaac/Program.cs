@@ -18,7 +18,7 @@ namespace isaac
             Application.SetCompatibleTextRenderingDefault(false);
             //Application.Run(new RegisterForm());
             //Application.Run(new Form1(1));
-            Application.Run(new LaunchForm(2));
+            Application.Run(new LaunchForm(1));
         }
     }
 }

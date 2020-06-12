@@ -36,29 +36,31 @@ namespace isaac
 
         Character character = new Character();
         HeroMemento characterState;
+        PictureBox[] heart;
 
         GameHistory history = new GameHistory();
         GameMemento GameState;
 
-        string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-3.png");
-        string pathForBackground2 = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-2.png");
+        string pathForBackground = Path.GetFullPath(@"textures\blocks\sand-3.png");
+        string pathForBackground2 = Path.GetFullPath(@"textures\blocks\waterfall-2.png");
+        string pathForOpenedDoor = System.IO.Path.GetFullPath(@"textures\blocks\sand-3.png");
 
-        string pathForCharacterGoFont = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-front-2.png");
-        string pathForCharacterGoBack = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-back-2.png");
-        string pathForCharacterGoSideLeft = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-side-left-2.png");
-        string pathForCharacterGoSideRight = System.IO.Path.GetFullPath(@"textures\hero\walk\hero-walk-side-right-2.png");
+        string pathForCharacterGoFont = Path.GetFullPath(@"textures\hero\walk\hero-walk-front.gif");
+        string pathForCharacterGoBack = Path.GetFullPath(@"textures\hero\walk\hero-walk-back.gif");
+        string pathForCharacterGoSideLeft = Path.GetFullPath(@"textures\hero\walk\hero-walk-side-left.gif");
+        string pathForCharacterGoSideRight = Path.GetFullPath(@"textures\hero\walk\hero-walk-side-right.gif");
 
-        string pathForFullHeart = System.IO.Path.GetFullPath(@"textures\hearts-1.png");
+        string pathForFullHeart = Path.GetFullPath(@"textures\hearts-1.png");
 
-        string pathForEnemy1Font = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-front-4.png");
-        string pathForEnemy1Back = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-back-4.png");
-        string pathForEnemy1Left = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-side-left-4.png");
-        string pathForEnemy1Right = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-side-right-4.png");
+        string pathForEnemy1Font = Path.GetFullPath(@"textures\enemies\enemy1\enemy1-walk-front.gif");
+        string pathForEnemy1Back = Path.GetFullPath(@"textures\enemies\enemy1\enemy1-walk-back.gif");
+        string pathForEnemy1Left = Path.GetFullPath(@"textures\enemies\enemy1\enemy1-walk-side-left.gif");
+        string pathForEnemy1Right = Path.GetFullPath(@"textures\enemies\enemy1\enemy1-walk-side-right.gif");
 
-        string pathForEnemy2Font = System.IO.Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-front-3.png");
-        string pathForEnemy2Back = System.IO.Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-back-3.png");
-        string pathForEnemy2Left = System.IO.Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-left-3.png");
-        string pathForEnemy2Right = System.IO.Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-right-3.png");
+        string pathForEnemy2Font = Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-front.gif");
+        string pathForEnemy2Back = Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-back.gif");
+        string pathForEnemy2Left = Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-side-left.gif");
+        string pathForEnemy2Right = Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-side-right.gif");
 
         private int currentUserId = 0;
 
@@ -74,14 +76,15 @@ namespace isaac
             this.Width = width;
             this.Height = height;
 
+            enemyTimer = null;
+            enemyTimer = new Timer();
+            enemyTimer.Tick += new EventHandler(moveEnemies);
+            enemyTimer.Interval = 500;
+
             RestoreGame(GameSavePath);
 
             this.KeyDown += new KeyEventHandler(keyPress);
 
-            enemyTimer = new Timer();
-            enemyTimer.Tick += new EventHandler(moveEnemies);
-            enemyTimer.Interval = 500;
-            enemyTimer.Start();
 
             GameSavePath = null;
         }
@@ -105,6 +108,7 @@ namespace isaac
                 Map = savedData.ReadMapDataFromFile();
                 Map.SaveState();
 
+                int t = 0;
                 for (int i = 0; i < 25; i++)
                 {
                     for (int j = 0; j < 25; j++)
@@ -115,7 +119,8 @@ namespace isaac
                         }
                         else if (Map.map[i, j] == 2)
                         {
-                            GenerateDoors(i, j);
+                            GenerateDoors(i, j, t);
+                            t++;
                         }
                     }
                 }
@@ -131,6 +136,11 @@ namespace isaac
                     }
                     enemyList[i] = new Enemy1(enemyStateList[i].id, enemyStateList[i].HitPoints, enemyStateList[i].damage, enemyStateList[i].Name, enemyStateList[i].sprite);
                     this.Controls.Add(enemyList[i].sprite);
+                }
+
+                if (countOfEnemies == 0)
+                {
+                    OpenDoors();
                 }
 
                 GenerateWorld(true);
@@ -155,19 +165,18 @@ namespace isaac
         {
             countOfEnemies = 0;
 
-            enemyTimer = new Timer();
-            enemyTimer.Start();
-
             timer = new Timer();
-
 
             if (!isFirstGame)
             {
                 GenerateMap();
                 GenerateEnemies();
             }
- 
+
             GenerateCharacter();
+
+            
+            enemyTimer.Start();
 
             GameState = new GameMemento(level, countOfEnemies, xml.GetUserById(currentUserId), score);
 
@@ -231,8 +240,22 @@ namespace isaac
             score = 0;
             timer.Stop();
 
-            MessageBox.Show("You are dead", "Defeat");
-            GenerateWorld(false);
+            enemyTimer.Stop();
+
+            var res = MessageBox.Show("Почати нову гру?", "Поразка", MessageBoxButtons.YesNo);
+
+            if (res == DialogResult.Yes)
+            {
+                GenerateWorld(false);
+            } else
+            {
+                this.Visible = false;
+
+                LaunchForm form = new LaunchForm(currentUserId);
+                form.ShowDialog();
+
+                this.Close();
+            }
         }
 
         private void getDamage()
@@ -263,7 +286,7 @@ namespace isaac
                         }
                     }
 
-                    if (character.HitPoints < 0)
+                    if (character.HitPoints <= 0)
                     {
                         GameOver();
                     }
@@ -281,6 +304,8 @@ namespace isaac
             countOfEnemies--;
             createStats(level, character.killedEnemies);
         }
+
+        Random rnd = new Random();
 
         private void killEnemy(PictureBox arrow)
         {
@@ -306,25 +331,36 @@ namespace isaac
                             score += 300;
                         }
 
-                        Random rnd = new Random();
-
                         if (rnd.Next(1, 10) == 1 && enemyList[i].Name == "enemy2")
                         {
-                            heart = new PictureBox();
-                            heart.Image = Image.FromFile(pathForFullHeart);
-                            heart.SizeMode = PictureBoxSizeMode.StretchImage;
-                            heart.BackgroundImage = background.Image;
-                            heart.Location = enemyList[i].sprite.Location;
-                            heart.Size = new Size(sizeOfSides - 10, sizeOfSides - 10);
-                            this.Controls.Add(heart);
+                            for (int j = 0; j < heart.Length; j++)
+                            {
+                                if (heart[j] == null)
+                                {
+                                    heart[j] = new PictureBox();
+                                    heart[j].Image = Image.FromFile(pathForFullHeart);
+                                    heart[j].SizeMode = PictureBoxSizeMode.StretchImage;
+                                    heart[j].BackgroundImage = background.Image;
+                                    heart[j].Location = enemyList[i].sprite.Location;
+                                    heart[j].Size = new Size(sizeOfSides - 10, sizeOfSides - 10);
+                                    this.Controls.Add(heart[j]);
 
-                            heart.BringToFront();
+                                    heart[j].BringToFront();
+
+                                    break;
+                                }
+                            }
                         }
 
                         character.killedEnemies++;
                         removeEnemy(enemyList[i]);
                         characterState = character.SaveState();
                         GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
+
+                        if (countOfEnemies == 0)
+                        {
+                            OpenDoors();
+                        }
 
                         break;
                     }
@@ -336,7 +372,6 @@ namespace isaac
             }
         }
 
-        PictureBox heart;
         PictureBox[] hearts = new PictureBox[6];
 
         Label levelLabel = new Label();
@@ -512,6 +547,7 @@ namespace isaac
             enemyList = new Enemy1[rnd.Next(1 + level, 6 + level)];
             enemyStateList = new EnemyMemento[enemyList.Length];
             enemyLocations = new int[enemyList.Length, 2];
+            heart = new PictureBox[enemyList.Length];
 
             for (int i = 0; i < enemyList.Length; i++)
             {
@@ -560,7 +596,6 @@ namespace isaac
                 countOfEnemies++;
                 enemyList[i] = enemy;
                 enemyStateList[i] = enemy.SaveState();
-                //GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
 
                 id++;
             }
@@ -627,7 +662,7 @@ namespace isaac
             });
         }
 
-        private void GoDoors(int x, int y)
+        private void GoDoors()
         {
             if (countOfEnemies <= 0)
             {
@@ -656,7 +691,7 @@ namespace isaac
         {
             if (Map.map[(character.sprite.Location.X + x) / sizeOfSides, (character.sprite.Location.Y + y) / sizeOfSides] == 2)
             {
-                GoDoors(x, y);
+                GoDoors();
             }
             else if (isWall(x, y, character.sprite))
             {
@@ -668,34 +703,40 @@ namespace isaac
 
                 if (heart != null)
                 {
-                    if (character.sprite.Location == heart.Location)
+                    for (int i = 0; i < heart.Length; i++)
                     {
-                        if (character.HitPoints < 300)
+                        if (heart[i] != null)
                         {
-                            character.HitPoints += 50;
-                            characterState = character.SaveState();
-                            character.RestoreState(characterState);
-
-                            hearts = new PictureBox[6];
-
-                            for (int i = 0; i < character.HitPoints; i += 50)
+                            if (character.sprite.Location == heart[i].Location)
                             {
-                                PictureBox heart = new PictureBox();
-                                heart.Image = Image.FromFile(pathForFullHeart);
-                                heart.SizeMode = PictureBoxSizeMode.StretchImage;
-                                heart.Location = new Point(width - 250 + i / 2, 120);
-                                heart.Size = new Size(25, 25);
+                                if (character.HitPoints < 300)
+                                {
+                                    character.HitPoints += 50;
+                                    characterState = character.SaveState();
+                                    character.RestoreState(characterState);
 
-                                hearts[i / 50] = heart;
-                            }
+                                    hearts = new PictureBox[6];
 
-                            for (int i = 0; i < 6; i++)
-                            {
-                                this.Controls.Add(hearts[i]);
+                                    for (int s = 0; s < character.HitPoints; s += 50)
+                                    {
+                                        PictureBox heart = new PictureBox();
+                                        heart.Image = Image.FromFile(pathForFullHeart);
+                                        heart.SizeMode = PictureBoxSizeMode.StretchImage;
+                                        heart.Location = new Point(width - 250 + s / 2, 120);
+                                        heart.Size = new Size(25, 25);
+
+                                        hearts[i / 50] = heart;
+                                    }
+
+                                    for (int j = 0; j < 6; j++)
+                                    {
+                                        this.Controls.Add(hearts[i]);
+                                    }
+                                }
+
+                                this.Controls.Remove(heart[i]);
                             }
                         }
-
-                        this.Controls.Remove(heart);
                     }
                 }
             }
@@ -758,6 +799,21 @@ namespace isaac
             characterState = character.SaveState();
         }
 
+        private void OpenDoors()
+        {
+            for (int i = 0; i < doors.Length; i++)
+            {
+                if (doors[i] == null)
+                {
+                    break;
+                }
+
+                doors[i].Image = Image.FromFile(pathForOpenedDoor);
+                doors[i].SizeMode = PictureBoxSizeMode.StretchImage;
+                doors[i].Refresh();
+            }
+        }
+
         private void DestroyMap()
         {
             Array.Clear(Map.map, 0, Map.map.Length);
@@ -765,6 +821,8 @@ namespace isaac
 
             MapState = Map.SaveState();
         }
+
+        PictureBox[] doors = new PictureBox[3];
 
         private void GenerateMap()
         {
@@ -782,7 +840,7 @@ namespace isaac
                     {
                         if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && j != 0 && j != 24)
                         {
-                            GenerateDoors(i, j);
+                            GenerateDoors(i, j, countOfDoors);
                             Map.map[i, j] = 2;
 
                             countOfDoors++;
@@ -798,7 +856,7 @@ namespace isaac
                     {
                         if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && j != 0 && j != 24)
                         {
-                            GenerateDoors(i, j);
+                            GenerateDoors(i, j, countOfDoors);
                             Map.map[i, j] = 2;
 
                             countOfDoors++;
@@ -814,7 +872,7 @@ namespace isaac
                     {
                         if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && i != 0 && i != 24)
                         {
-                            GenerateDoors(i, j);
+                            GenerateDoors(i, j, countOfDoors);
                             Map.map[i, j] = 2;
 
                             countOfDoors++;
@@ -830,7 +888,7 @@ namespace isaac
                     {
                         if (rnd.Next(0, 50) == 1 && countOfDoors <= 2 && i != 0 && i != 24)
                         {
-                            GenerateDoors(i, j);
+                            GenerateDoors(i, j, countOfDoors);
                             Map.map[i, j] = 2;
 
                             countOfDoors++;
@@ -839,7 +897,7 @@ namespace isaac
                         {
                             if (countOfDoors == 0)
                             {
-                                GenerateDoors(i, j);
+                                GenerateDoors(i, j, countOfDoors);
                                 Map.map[i, j] = 2;
 
                                 countOfDoors++;
@@ -872,6 +930,7 @@ namespace isaac
                 }
             }
 
+            Map.countOfDoors = countOfDoors;
             MapState = Map.SaveState();
         }
 
@@ -889,20 +948,21 @@ namespace isaac
             this.Controls.Add(stoneMoss);
         }
 
-        private void GenerateDoors(int i, int j)
+        private void GenerateDoors(int i, int j, int countOfDoors)
         {
-            string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-3.png");
+            string pathForDoor = Path.GetFullPath(@"textures\blocks\door-1.png");
 
             PictureBox door = new PictureBox();
 
-            door.Image = Image.FromFile(pathForBackground);
+            door.Image = Image.FromFile(pathForDoor);
             door.SizeMode = PictureBoxSizeMode.StretchImage;
 
             door.Location = new Point(i * sizeOfSides, j * sizeOfSides);
             door.Size = new Size(sizeOfSides, sizeOfSides);
             door.Parent = background;
-            door.BringToFront();
             this.Controls.Add(door);
+
+            doors[countOfDoors] = door;
         }
 
         private void GenerateBorder(int i, int j)
@@ -917,7 +977,7 @@ namespace isaac
             border.Location = new Point(i * sizeOfSides, j * sizeOfSides);
             border.Size = new Size(sizeOfSides, sizeOfSides);
             border.Parent = background;
-            border.BringToFront();
+
             this.Controls.Add(border);
         }
     }

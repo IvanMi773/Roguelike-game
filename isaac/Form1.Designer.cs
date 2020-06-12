@@ -38,7 +38,7 @@
             this.ClientSize = new System.Drawing.Size(1175, 450);
             this.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Roguelike";
             this.ResumeLayout(false);
 
         }

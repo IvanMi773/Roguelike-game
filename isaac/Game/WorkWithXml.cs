@@ -71,6 +71,11 @@ namespace isaac.Game
             int i = 0, j = 0;
             foreach (XmlNode row in xRoot["map"])
             {
+                if (row.Name == "countOfDoors")
+                {
+                    continue;
+                }
+
                 foreach (XmlNode cell in row)
                 {
                     m[i, j] = Convert.ToInt32(cell.InnerText);
@@ -80,8 +85,20 @@ namespace isaac.Game
                 j = 0;
             }
 
+            int countOfDoors = 0;
+
+            foreach (XmlNode row in xRoot["map"])
+            {
+                if (row.Name == "countOfDoors")
+                {
+                    countOfDoors = Convert.ToInt32(row.InnerText);
+                }
+            }
+
+
             Map map = new Map();
             map.map = m;
+            map.countOfDoors = countOfDoors;
 
             return map;
         }

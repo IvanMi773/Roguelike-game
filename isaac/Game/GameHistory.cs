@@ -68,6 +68,10 @@ namespace isaac.Game
 
             // Map saving data
             XElement map = new XElement("map");
+            XElement countOfDoors = new XElement("countOfDoors", Map.countOfDoors);
+
+            map.Add(countOfDoors);
+
             for (int i = 0; i < Map.map.GetLength(0); i++)
             {
                 XElement row = new XElement("row");
@@ -85,9 +89,6 @@ namespace isaac.Game
             save.Add(enemies);
             save.Add(map);
             doc.Add(save);
-
-            Random rnd = new Random();
-            int num = rnd.Next(1000, 50000);
 
             doc.Save(@"database/gamesaves/" + gameState.userName + "_" + gameState.level.ToString() + "_" + gameState.score.ToString() + ".xml");
         }
