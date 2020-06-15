@@ -71,11 +71,6 @@ namespace isaac.Game
             int i = 0, j = 0;
             foreach (XmlNode row in xRoot["map"])
             {
-                if (row.Name == "countOfDoors")
-                {
-                    continue;
-                }
-
                 foreach (XmlNode cell in row)
                 {
                     m[i, j] = Convert.ToInt32(cell.InnerText);
@@ -85,20 +80,8 @@ namespace isaac.Game
                 j = 0;
             }
 
-            int countOfDoors = 0;
-
-            foreach (XmlNode row in xRoot["map"])
-            {
-                if (row.Name == "countOfDoors")
-                {
-                    countOfDoors = Convert.ToInt32(row.InnerText);
-                }
-            }
-
-
             Map map = new Map();
             map.map = m;
-            map.countOfDoors = countOfDoors;
 
             return map;
         }
@@ -120,7 +103,7 @@ namespace isaac.Game
             {
                 string pathForEnemy1Back = System.IO.Path.GetFullPath(@"textures\enemies\enemy1\mole-walk-back-4.png");
                 string pathForEnemy2Back = System.IO.Path.GetFullPath(@"textures\enemies\enemy2\treant-walk-back-3.png");
-                string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\waterfall-3.png");
+                string pathForBackground = System.IO.Path.GetFullPath(@"textures\blocks\sand-3.png");
 
                 PictureBox sprite = new PictureBox();
                 sprite.Size = new Size(30, 30);
@@ -236,18 +219,6 @@ namespace isaac.Game
                         user = node.ChildNodes[1].InnerText;
                     }
                 }
-                //foreach (XmlNode childnode in node.ChildNodes)
-                //{
-                //    if (childnode.Name == "id")
-                //    {
-
-                //    }
-
-                //    if (childnode.Name == "username")
-                //    {
-                //        user = childnode.InnerText;
-                //    }
-                //}
             }
 
             return user;

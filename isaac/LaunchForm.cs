@@ -70,20 +70,23 @@ namespace isaac
                 }
             }
 
-            dataGridView1.RowCount = t;
-
-            for (int i = 0; i < userGames.Length; i++)
+            if (t > 0)
             {
-                if (userGames[i] == null || userGames[i] == "")
+                dataGridView1.RowCount = t;
+
+                for (int i = 0; i < userGames.Length; i++)
                 {
-                    break;
+                    if (userGames[i] == null || userGames[i] == "")
+                    {
+                        break;
+                    }
+
+                    string[] userInFileName = userGames[i].Split(new[] { '_', '.' });
+
+                    dataGridView1.Rows[i].Cells[0].Value = userInFileName[0];
+                    dataGridView1.Rows[i].Cells[1].Value = userInFileName[1];
+                    dataGridView1.Rows[i].Cells[2].Value = userInFileName[2];
                 }
-
-                string[] userInFileName = userGames[i].Split(new[] { '_', '.' });
-
-                dataGridView1.Rows[i].Cells[0].Value = userInFileName[0];
-                dataGridView1.Rows[i].Cells[1].Value = userInFileName[1];
-                dataGridView1.Rows[i].Cells[2].Value = userInFileName[2];
             }
         }
 
@@ -91,7 +94,7 @@ namespace isaac
         {
             currentGame = dataGridView1.CurrentCell.RowIndex;
 
-            if (currentGame != 0)
+            if (currentGame >= 0)
             {
                 this.Visible = false;
 
@@ -123,6 +126,11 @@ namespace isaac
                 dataGridView1.Rows.RemoveAt(currentGame);
                 dataGridView1.Refresh();
             }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

@@ -19,6 +19,7 @@ namespace isaac
     {
         PictureBox background = new PictureBox();
 
+        // вікно гри і геймбар
         private int width = 770 + 300;
         private int height = 790;
         private int sizeOfSides = 30;
@@ -43,7 +44,7 @@ namespace isaac
 
         string pathForBackground = Path.GetFullPath(@"textures\blocks\sand-3.png");
         string pathForBackground2 = Path.GetFullPath(@"textures\blocks\waterfall-2.png");
-        string pathForOpenedDoor = System.IO.Path.GetFullPath(@"textures\blocks\sand-3.png");
+        string pathForOpenedDoor = Path.GetFullPath(@"textures\blocks\sand-3.png");
 
         string pathForCharacterGoFont = Path.GetFullPath(@"textures\hero\walk\hero-walk-front.gif");
         string pathForCharacterGoBack = Path.GetFullPath(@"textures\hero\walk\hero-walk-back.gif");
@@ -69,7 +70,7 @@ namespace isaac
 
         public Form1(int id, string GameSavePath = null)
         {
-            this.currentUserId = id;
+            currentUserId = id;
 
             InitializeComponent();
 
@@ -84,9 +85,6 @@ namespace isaac
             RestoreGame(GameSavePath);
 
             this.KeyDown += new KeyEventHandler(keyPress);
-
-
-            GameSavePath = null;
         }
 
         private int level = 1;
@@ -136,6 +134,8 @@ namespace isaac
                     }
                     enemyList[i] = new Enemy1(enemyStateList[i].id, enemyStateList[i].HitPoints, enemyStateList[i].damage, enemyStateList[i].Name, enemyStateList[i].sprite);
                     this.Controls.Add(enemyList[i].sprite);
+
+                    countOfEnemies++;
                 }
 
                 if (countOfEnemies == 0)
@@ -161,21 +161,21 @@ namespace isaac
             }
         }
 
+        // коли користувач створює нову гру то генеруємо карту і ворогів
+        // інакше це робимо в RestoreState
         private void GenerateWorld(bool isFirstGame)
         {
-            countOfEnemies = 0;
-
             timer = new Timer();
 
             if (!isFirstGame)
             {
+                countOfEnemies = 0;
                 GenerateMap();
                 GenerateEnemies();
             }
 
             GenerateCharacter();
 
-            
             enemyTimer.Start();
 
             GameState = new GameMemento(level, countOfEnemies, xml.GetUserById(currentUserId), score);
@@ -242,12 +242,10 @@ namespace isaac
 
             enemyTimer.Stop();
 
-            var res = MessageBox.Show("Почати нову гру?", "Поразка", MessageBoxButtons.YesNo);
-
-            if (res == DialogResult.Yes)
-            {
-                GenerateWorld(false);
-            } else
+            GameOverForm f = new GameOverForm();
+            f.ShowDialog();
+            
+            if (Data.redirect)
             {
                 this.Visible = false;
 
@@ -255,6 +253,9 @@ namespace isaac
                 form.ShowDialog();
 
                 this.Close();
+            } else
+            {
+                GenerateWorld(false);
             }
         }
 
@@ -357,15 +358,11 @@ namespace isaac
                         characterState = character.SaveState();
                         GameState.SetState(level, countOfEnemies, xml.GetUserById(currentUserId), score);
 
-                        if (countOfEnemies == 0)
+                        if (countOfEnemies <= 0)
                         {
                             OpenDoors();
                         }
 
-                        break;
-                    }
-                    else
-                    {
                         break;
                     }
                 }
@@ -930,7 +927,6 @@ namespace isaac
                 }
             }
 
-            Map.countOfDoors = countOfDoors;
             MapState = Map.SaveState();
         }
 

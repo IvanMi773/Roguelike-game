@@ -46,6 +46,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data.cs" />
+    <Compile Include="GaveOverForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GaveOverForm.Designer.cs">
+      <DependentUpon>GaveOverForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Instances\Character.cs" />
     <Compile Include="Instances\Enemy1.cs" />
     <Compile Include="Form1.cs">
@@ -77,6 +84,9 @@
     <Compile Include="Game\WorkWithXml.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GaveOverForm.resx">
+      <DependentUpon>GaveOverForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LaunchForm.resx">
       <DependentUpon>LaunchForm.cs</DependentUpon>
