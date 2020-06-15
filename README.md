@@ -3,14 +3,14 @@
 ## Gameplay of game
 
 ### First register or login
-!(screenshots/register-1.png)
-!(screenshots/register-2.png)
+![register-1](screenshots/register-1.png)
+![register-2](screenshots/register-2.png)
 
 ### Choose saved game or create new
-!(screenshots/launch.png)
+![launch](screenshots/launch.png)
 
 ### Good luck
-!(screenshots/gameplay-1.png)
+![gameplay-1](screenshots/gameplay-1.png)
 
 ### Everything happens)
-!(screenshots/gameover.png)
+![gameover](screenshots/gameover.png)
