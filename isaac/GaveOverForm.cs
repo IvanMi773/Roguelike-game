@@ -18,8 +18,8 @@ namespace isaac
         {
             InitializeComponent();
 
-            SoundPlayer player = new SoundPlayer(@"sounds/game_over.wav");
-            player.Play();
+            //SoundPlayer player = new SoundPlayer(@"sounds/game_over.wav");
+            //player.Play();
         }
 
         private void button1_Click_1(object sender, EventArgs e)

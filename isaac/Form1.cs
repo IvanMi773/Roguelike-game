@@ -44,7 +44,10 @@ namespace isaac
 
         string pathForBackground = Path.GetFullPath(@"textures\blocks\sand-3.png");
         string pathForBackground2 = Path.GetFullPath(@"textures\blocks\waterfall-2.png");
-        string pathForOpenedDoor = Path.GetFullPath(@"textures\blocks\sand-3.png");
+
+        string pathForStoneMoss = Path.GetFullPath(@"textures\blocks\stoneMoss.png");
+        string pathForDoor = Path.GetFullPath(@"textures\blocks\door-1.png");
+        string path = Path.GetFullPath(@"textures\blocks\stonebricksmooth_cracked.png");
 
         string pathForCharacterGoFont = Path.GetFullPath(@"textures\hero\walk\hero-walk-front.gif");
         string pathForCharacterGoBack = Path.GetFullPath(@"textures\hero\walk\hero-walk-back.gif");
@@ -805,7 +808,7 @@ namespace isaac
                     break;
                 }
 
-                doors[i].Image = Image.FromFile(pathForOpenedDoor);
+                doors[i].Image = Image.FromFile(pathForBackground);
                 doors[i].SizeMode = PictureBoxSizeMode.StretchImage;
                 doors[i].Refresh();
             }
@@ -932,8 +935,6 @@ namespace isaac
 
         private void GenerateStoneMoss(int i, int j)
         {
-            string pathForStoneMoss = System.IO.Path.GetFullPath(@"textures\blocks\stoneMoss.png");
-
             PictureBox stoneMoss = new PictureBox();
 
             stoneMoss.Image = Image.FromFile(pathForStoneMoss);
@@ -946,8 +947,6 @@ namespace isaac
 
         private void GenerateDoors(int i, int j, int countOfDoors)
         {
-            string pathForDoor = Path.GetFullPath(@"textures\blocks\door-1.png");
-
             PictureBox door = new PictureBox();
 
             door.Image = Image.FromFile(pathForDoor);
@@ -963,8 +962,6 @@ namespace isaac
 
         private void GenerateBorder(int i, int j)
         {
-            string path = System.IO.Path.GetFullPath(@"textures\blocks\stonebricksmooth_cracked.png");
-
             PictureBox border = new PictureBox();
 
             border.Image = Image.FromFile(path);
