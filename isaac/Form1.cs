@@ -374,13 +374,13 @@ namespace isaac
 
         PictureBox[] hearts = new PictureBox[6];
 
-        Label levelLabel = new Label();
-        Label killedEnemiesLabel = new Label();
-        Label countOfEnemiesLabel = new Label();
-        Label usernameLabel = new Label();
-
         private void createStats(int lev, int killed)
         {
+            Label levelLabel = new Label();
+            Label killedEnemiesLabel = new Label();
+            Label countOfEnemiesLabel = new Label();
+            Label usernameLabel = new Label();
+
             usernameLabel.Text = xml.GetUserById(currentUserId).ToString();
             usernameLabel.Size = new Size(100, 30);
             usernameLabel.Location = new Point(width - 250, 10);

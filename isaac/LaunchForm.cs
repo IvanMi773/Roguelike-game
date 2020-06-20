@@ -35,10 +35,7 @@ namespace isaac
             dataGridView1.Columns[1].HeaderCell.Value = "Рівень";
             dataGridView1.Columns[2].HeaderCell.Value = "Очки";
 
-            if (userId != 1)
-            {
-                dataGridView1.ReadOnly = true;
-            } else
+            if (userId == 1)
             {
                 button2.Visible = true;
             }
